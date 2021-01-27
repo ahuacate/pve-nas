@@ -1,4 +1,4 @@
-# This file is for base folders only. If you want to add sub folders (i.e /srv/$HOSTNAME/video/tv) then edit pve_zfs_nas_base_folder_subfolder_setup file
+# This file is for base folders ONLY. If you want to add sub folders (i.e /srv/$HOSTNAME/video/tv) then edit pve_zfs_nas_base_folder_subfolder_setup file
 # FOLDERNAME GROUP PERMISSIONS ACL
 audio root 0750 medialab:rwx privatelab:rwx chrootjail:rx
 backup root 1750 medialab:rwx homelab:rwx privatelab:rwx
