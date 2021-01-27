@@ -1,0 +1,14 @@
+# Insert your base sub folders and group acl here!
+
+# Video Folders
+/srv/$HOSTNAME/video/cctv medialab 0750 medialab:rx privatelab:rwx homelab:rwx chrootjail:000
+/srv/$HOSTNAME/video/documentary medialab 0750 medialab:rwx privatelab:rwx homelab:000 chrootjail:rx
+/srv/$HOSTNAME/video/homevideo medialab 1750 medialab:rwx privatelab:rwx homelab:000 chrootjail:rwx
+/srv/$HOSTNAME/video/movies medialab 0750 medialab:rwx privatelab:rwx homelab:000 chrootjail:rx
+/srv/$HOSTNAME/video/musicvideo medialab 0750 medialab:rwx homelab:000 privatelab:rwx chrootjail:rwx
+/srv/$HOSTNAME/video/pron medialab 0750 medialab:rwx homelab:000 privatelab:rwx chrootjail:rwx
+/srv/$HOSTNAME/video/tv medialab 0750 medialab:rwx privatelab:rwx homelab:000 chrootjail:rx
+/srv/$HOSTNAME/video/transcode medialab 0750 medialab:rwx privatelab:rwx homelab:000 chrootjail:000
+
+# Audio Book Folders
+/srv/$HOSTNAME/audio/audiobooks medialab 0750 medialab:rwx privatelab:rwx homelab:000 chrootjail:rx
