@@ -82,7 +82,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/ma
 ```
 
 **Add-on** (optional)
-Optional Add-on Easy Scripts can be run anytime. They are for adding new PVE NAS user accounts, installing a new service or even updating your PVE NAS OS release. Your options include:
+Optional Add-on Easy Scripts can be run anytime. They are for adding new PVE NAS User Accounts, installing a new service or even updating your PVE NAS OS release. Your options include:
 1. Adding a Jailed Chroot User Account
 2. Adding a Power User Account
 3. Adding a Kodi Rsync User Account
@@ -116,7 +116,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/ma
     - [2.7. NAS Root Password](#27-nas-root-password)
     - [2.8. USB Passthrough to CT](#28-usb-passthrough-to-ct)
 - [3. About our User Accounts](#3-about-our-user-accounts)
-    - [3.1. Create New "Power User" Accounts](#31-create-new-power-user-accounts)
+    - [3.1. Create "Power User" Accounts](#31-create-power-user-accounts)
     - [3.2. Create Restricted and Jailed User Accounts (Standard Users)](#32-create-restricted-and-jailed-user-accounts-standard-users)
     - [3.3. Create a KODI_RSYNC User](#33-create-a-kodi_rsync-user)
 
@@ -181,7 +181,9 @@ You need a designated administrator email address. All server alerts and server 
 
 Our Easy Script will give you the the option to install a SSMTP Email server. SSMTP is Mail Transfer Agent (MTA) used to send email alerts about your machine like details about new user accounts, unwarranted login attempts and system critical alerts to the systems designated administrator.
 
-You will be asked for the credentials of a SMTP Server. You can use Gmail, GoDaddy, AWS or any SMTP server credentials (i.e address, port, username and password, encryption type etc.
+Having a working SMTP server makes life much easier. For example, you can receive all new User Account SSH keys and login credentials via email.
+
+You will be asked for the credentials of a SMTP Server. You can use GMail, GoDaddy, AWS or any SMTP server credentials (i.e address, port, username and password, encryption type etc.
 
 But we recommend you create a account at [Mailgun](mailgun.com) to relay your NAS system emails to your designated administrator. With [Mailgun](mailgun.com) you are not potentially exposing your private email server credentials held within a text file on your NAS. This is a added layer of security.
 
@@ -207,7 +209,7 @@ Have a root password ready and stored away safely.
 
 ## 2.8. USB Passthrough to CT
 
-There can be good reasons to access USB disk ware directly from yo CT. To make a physically connected USB device accessible inside a CT, for example NAS-01, t CT configuration file requires modification.
+There can be good reasons to access USB disk ware directly from your CT. To make a physically connected USB device accessible inside a CT, for example NAS-01, the CT configuration file requires modification.
 
 During the installation the Easy Script will display all available USB devices on the host computer. But you need to identify which USB host device ID to passthrough to the NAS CT. The simplest way is to plugin a physical USB memory stick, for example a SanDisk Cruzer Blade, into your preferred USB port on the host machine. Then to physically identify the USB host device ID (the USB port) to passthrough to PVE NAS CT it will be displayed on your terminal when running our Easy Script at the required USB passthrough stage as for example:
 
@@ -215,7 +217,7 @@ During the installation the Easy Script will display all available USB devices o
 5) Bus 002 Device 004: ID 0781:5567 SanDisk Corp. Cruzer Blade
 ```
 
-In the above example, you will select number **5** to passthrough. Then ONLY your PVE host hardware USB port where the SanDisk Blade drive was inserted is readable by yo in the future.
+In the above example, you will select number **5** to passthrough. Then ONLY your PVE host hardware USB port where the SanDisk Blade drive was inserted is readable by you in the future.
 
 So have a spare USB drive ready and available.
 
@@ -229,7 +231,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/ma
 
 The Add-on Easy Script will prompt the installer with options:
 
-## 3.1. Create New "Power User" Accounts
+## 3.1. Create "Power User" Accounts
 
 Power Users are trusted persons with privileged access to data and application resources hosted on your PVE NAS. Power Users are NOT standard users! Standard users are added with another chroot jail script. Each new Power Users security permissions are controlled by Linux groups. Group security permission levels are as follows:
 
