@@ -72,24 +72,24 @@ The above default Linux users and groups (media:medialab, home:homelab, private:
 
 <h4>Easy Script</h4>
 
-Easy Scripts are based on bash scripting. Simply `Cut & Paste` a Easy Script command into your terminal window, press `Enter` and follow the prompts and terminal instructions. But PLEASE read our guide so you fully understand the prerequisites and your input requirements.
+Easy Scripts are based on bash scripting. Simply `Cut & Paste` our Easy Script command into your terminal window, press `Enter` and follow the prompts and terminal instructions. But PLEASE first read our guide so you fully understand each scripts prerequisites and your input requirements.
 
 **Installation**
-This Easy Script will create a new PVE NAS CT, create user accounts, give the installer options to run our add-ons, and fully configure yo (Recommended).
+This Easy Script will create a new PVE NAS CT, create PVE NAS User Accounts, give the installer options to run our optional add-ons, and fully configure your new PVE NAS (Recommended).
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_create_ct.sh)"
 ```
 
 **Add-on** (optional)
-Optional add-ons a Easy Scripts which can be run anytime for adding new PVE NAS user accounts, installing a new service or even updating yo OS release. Your options include:
-1. Add a Jailed Chroot User Account
-2. Add a Power User Account
-3. Add a Kodi Rsync User Account
+Optional Add-on Easy Scripts can be run anytime. They are for adding new PVE NAS user accounts, installing a new service or even updating your PVE NAS OS release. Your options include:
+1. Adding a Jailed Chroot User Account
+2. Adding a Power User Account
+3. Adding a Kodi Rsync User Account
 4. Install & Configure a SSMTP Server
 5. Install & Configure ProFTPd Server
-6. R OS Version Release Updater
-7. Create a Medialab-Rsync Server (for Kodi players)
+6. PVE NAS OS Version Release Updater
+7. Create a new Medialab-Rsync Server CT (for Kodi players only)
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_easyscript_addon_ct.sh)"
@@ -165,7 +165,7 @@ Our Easy Script has the options to use the following ZFS Raid builds:
 |RAIDZ2|A variation on RAID-5, double parity. Requires at least 4 disks.
 |RAIDZ3|A variation on RAID-5, triple parity. Requires at least 5 disks.
 
-Remember our Easy Script will destroy all existing data on these storage hard disks and it's not recoverable!
+Remember our Easy Script will destroy all existing data on these storage hard disks and its not recoverable!
 
 # 2. Installer Prerequisite Credentials and inputs needed
 
@@ -179,7 +179,7 @@ You need a designated administrator email address. All server alerts and server 
 
 ## 2.2. SMTP Server Credentials
 
-Our Easy Script will give you the the option to install a SSMTP Email server. SSMTP is Mail Transfer Agent (MTA) used to send email alerts about your machine like details about new user accounts, unwarranted login attempts and system critical alerts to the system's designated administrator.
+Our Easy Script will give you the the option to install a SSMTP Email server. SSMTP is Mail Transfer Agent (MTA) used to send email alerts about your machine like details about new user accounts, unwarranted login attempts and system critical alerts to the systems designated administrator.
 
 You will be asked for the credentials of a SMTP Server. You can use Gmail, GoDaddy, AWS or any SMTP server credentials (i.e address, port, username and password, encryption type etc.
 
@@ -291,15 +291,13 @@ All Home folders are automatically suffixed: `username_injail`.
 
 ## 3.3. Create a KODI_RSYNC User
 
-KODI_RSYNC is a special user created for synchronising a portable or remote media player with your PVE NAS media library. Connection is by rSSH rSync. Its ideal for travellers or persons going away to a remote location with poor or no internet access. Our rSync script will securely connect to your File Server and;
+"kodi_rsync" is a special user account created for synchronising a portable or remote kodi media player with a hard disk to your PVE NAS media video, music and photo libraries. Connection is by rSSH rSync. This is for persons wanting a portable copy of their media for travelling to remote locations where there is limited bandwidth or no internet access.
 
-- rSync mirror your selected media library to your kodi player USB disk.
-- copy your latest media only to your kodi player USB disk.
-- remove the oldest media to fit newer media.
+"kodi_rsync" is NOT a media server for Kodi devices. If you want a home media server then create our PVE Jellyfin CT.  Our rSync script will securely connect to your PVE NAS and;
+- rsync mirror your selected media library to your kodi player USB disk
+- copy your latest media only to your kodi player USB disk
+- remove the oldest media to fit newer media
+- fill your USB disk to a limit set by you.
 
-This is ideally suited for holiday homes, yachts or people on the move.
-
-The first step involves creating a new user called "kodi_rsync" on your File Server which has limited and restricted permissions granting rSync read access only to your media libraries.
-
-The second step, performed at a later stage, is setting up a CoreElec or LibreElec player hardware with a USB hard disk and installing our rSync scripts along with your PVE NAS user "kodi_rsync" private ssh ed25519 key.
+The first step involves creating a new user called "kodi_rsync" on your PVE NAS which has limited and restricted permissions granting rSync read access only to your media libraries. The second step, performed at a later stage, is setting up a CoreElec or LibreElec player hardware with a USB hard disk and installing our rSync client scripts along with your PVE NAS user "kodi_rsync" private ssh ed25519 key.
 
