@@ -124,7 +124,7 @@ else
 fi
 
 # Script Variables
-SECTION_HEAD="PVE ZFS NAS"
+SECTION_HEAD="PVE NAS"
 CT_HOSTNAME_VAR="nas-01"
 CT_HOSTNAME_VAR=${CT_HOSTNAME_VAR,,}
 
@@ -162,7 +162,7 @@ apt -y autoremove > /dev/null 2>&1
 #### Introduction ####
 section "$SECTION_HEAD - Introduction."
 
-box_out '#### PLEASE READ CAREFULLY ####' '' 'This script will create a Proxmox (PVE) ZFS NAS container.' 'User input is required. The script may create, edit and/or change system' 'files on your PVE host. When an optional default setting is provided' 'you may accept the default by pressing ENTER on your keyboard or' 'change it to your preferred value.' '' 'You should have your prerequisites ready and all credentials, such as SSMTP' 'server and Mailgun credentials, readily available.' 'The PVE ZFS NAS will be configured with NFS4.1, Samba and Webmin so you can manage your PVE ZFS NAS.'
+box_out '#### PLEASE READ CAREFULLY ####' '' 'This script will create a Proxmox (PVE) ZFS NAS container.' 'User input is required. The script may create, edit and/or change system' 'files on your PVE host. When an optional default setting is provided' 'you may accept the default by pressing ENTER on your keyboard or' 'change it to your preferred value.' '' 'You should have your prerequisites ready and all credentials, such as SSMTP' 'server and Mailgun credentials, readily available.' 'The PVE NAS will be configured with NFS4.1, Samba and Webmin so you can manage your PVE NAS.'
 echo
 read -p "Proceed to create a $SECTION_HEAD [y/n]? " -n 1 -r
 echo
@@ -1345,7 +1345,7 @@ section "$SECTION_HEAD - Setting up USB Passthrough for host $HOSTNAME and $CT_H
 
 # Add USB Passthrough to CT
 echo
-box_out '#### USB PASSTHROUGH ####' '' 'There can be good reasons to access USB diskware directly from your PVE ZFS NAS.' 'To make a physically connected USB device accessible inside a CT the CT configuration' 'file requires modification.' 'In the next step the installation script will display all available USB devices on the host.' 'You need to identify which USB host device ID to passthrough to the CT.' 'The simplest way is to now plugin a physical USB memory stick,' 'for example a SanDisk Cruzer Blade, into a preferred USB port on the host machine.' 'Then to physically identify the USB host device ID' 'to passthrough it will show in the scripts next step. For example:' '' '    5) Bus 002 Device 004: ID 0781:5567 SanDisk Corp. Cruzer Blade' '' 'In this example select No.5 to passthrough.' '' 'In the next step choose the hosts USB device ID to passthrough to the PVE ZFS NAS.'
+box_out '#### USB PASSTHROUGH ####' '' 'There can be good reasons to access USB diskware directly from your PVE NAS.' 'To make a physically connected USB device accessible inside a CT the CT configuration' 'file requires modification.' 'In the next step the installation script will display all available USB devices on the host.' 'You need to identify which USB host device ID to passthrough to the CT.' 'The simplest way is to now plugin a physical USB memory stick,' 'for example a SanDisk Cruzer Blade, into a preferred USB port on the host machine.' 'Then to physically identify the USB host device ID' 'to passthrough it will show in the scripts next step. For example:' '' '    5) Bus 002 Device 004: ID 0781:5567 SanDisk Corp. Cruzer Blade' '' 'In this example select No.5 to passthrough.' '' 'In the next step choose the hosts USB device ID to passthrough to the PVE NAS.'
 sleep 1
 echo
 read -p "Do you want to configure USB pass through for $CT_HOSTNAME [y/n]? " -n 1 -r
@@ -1379,8 +1379,8 @@ if [ "$USBPASS" = "0" ]; then
 fi
 
 
-#### Configuring PVE ZFS NAS Container ####
-section "$SECTION_HEAD - Configuring your PVE ZFS NAS $CT_HOSTNAME."
+#### Configuring PVE NAS Container ####
+section "$SECTION_HEAD - Configuring your PVE NAS $CT_HOSTNAME."
 
 # Add LXC mount points
 #lxc.mount.entry: /tank/data srv/data none bind,create=dir,optional 0 0

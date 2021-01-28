@@ -62,7 +62,7 @@ NC=$'\033[0m'
 printf '\033[8;40;120t'
 
 # Script Variables
-SECTION_HEAD="Proxmox ZFS NAS"
+SECTION_HEAD="PVE NAS"
 
 # Set Temp Folder
 if [ -z "${TEMP_DIR+x}" ]; then
@@ -85,7 +85,7 @@ if [ -z "${NEW_POWER_USER+x}" ] && [ -z "${PARENT_EXEC_NEW_POWER_USER+x}" ]; the
   section "$SECTION_HEAD - Create New Power User Accounts"
 
   echo
-  box_out '#### PLEASE READ CAREFULLY - CREATING POWER USER ACCOUNTS ####' '' 'Power Users are trusted persons with privileged access to data and application' 'resources hosted on your PVE ZFS NAS. Power Users are NOT standard users!' 'Standard users are added at a later stage.' '' 'Each new Power Users security permissions are controlled by Linux groups.' 'Group security permission levels are as follows:' '' '  --  GROUP NAME    -- PERMISSIONS' '  --  "medialab"    -- Everything to do with media (i.e movies, TV and music)' '  --  "homelab"     -- Everything to do with a smart home including "medialab"' '  --  "privatelab"  -- Private storage including "medialab" & "homelab" rights' '' 'A Personal Home Folder will be created for each new user. The folder name is' 'the users name. You can access Personal Home Folders and other shares' 'via CIFS/Samba and NFS.' '' 'Remember your PVE ZFS NAS is also pre-configured with user names' 'specifically tasked for running hosted applications (i.e Proxmox LXC,CT,VM).' 'These application users names are as follows:' '' '  --  GROUP NAME    -- USER NAME' '  --  "medialab"    -- /srv/CT_HOSTNAME/homes/"media"' '  --  "homelab"     -- /srv/CT_HOSTNAME/homes/"home"' '  --  "privatelab"  -- /srv/CT_HOSTNAME/homes/"private"'
+  box_out '#### PLEASE READ CAREFULLY - CREATING POWER USER ACCOUNTS ####' '' 'Power Users are trusted persons with privileged access to data and application' 'resources hosted on your PVE NAS. Power Users are NOT standard users!' 'Standard users are added at a later stage.' '' 'Each new Power Users security permissions are controlled by Linux groups.' 'Group security permission levels are as follows:' '' '  --  GROUP NAME    -- PERMISSIONS' '  --  "medialab"    -- Everything to do with media (i.e movies, TV and music)' '  --  "homelab"     -- Everything to do with a smart home including "medialab"' '  --  "privatelab"  -- Private storage including "medialab" & "homelab" rights' '' 'A Personal Home Folder will be created for each new user. The folder name is' 'the users name. You can access Personal Home Folders and other shares' 'via CIFS/Samba and NFS.' '' 'Remember your PVE NAS is also pre-configured with user names' 'specifically tasked for running hosted applications (i.e Proxmox LXC,CT,VM).' 'These application users names are as follows:' '' '  --  GROUP NAME    -- USER NAME' '  --  "medialab"    -- /srv/CT_HOSTNAME/homes/"media"' '  --  "homelab"     -- /srv/CT_HOSTNAME/homes/"home"' '  --  "privatelab"  -- /srv/CT_HOSTNAME/homes/"private"'
   echo
   read -p "Create new power user accounts on your $SECTION_HEAD [y/n]? " -n 1 -r
   echo
@@ -200,7 +200,7 @@ fi
 if [ $(dpkg -s ssmtp >/dev/null 2>&1; echo $?) = 0 ] && [ $(grep -qs "^root:*" /etc/ssmtp/revaliases >/dev/null; echo $?) = 0 ]; then
   section "$SECTION_HEAD - Email User Credentials & SSH keys"
   echo
-  box_out '#### PLEASE READ CAREFULLY - EMAIL NEW USER CREDENTIALS ####' '' 'You can email each new users login credentials and ssh keys to the' 'system administrator. The system administrator may then forward the email(s)' 'to each new user.' '' 'Each email will include the following information and attachments:' '' '  --  Username' '  --  Password' '  --  User Group' '  --  Folder Permission Level' '  --  Private SSH Key (Standard)' '  --  Private SSH Key (PPK Version)' '  --  PVE ZFS NAS IP Address' '  --  SMB Status'
+  box_out '#### PLEASE READ CAREFULLY - EMAIL NEW USER CREDENTIALS ####' '' 'You can email each new users login credentials and ssh keys to the' 'system administrator. The system administrator may then forward the email(s)' 'to each new user.' '' 'Each email will include the following information and attachments:' '' '  --  Username' '  --  Password' '  --  User Group' '  --  Folder Permission Level' '  --  Private SSH Key (Standard)' '  --  Private SSH Key (PPK Version)' '  --  PVE NAS IP Address' '  --  SMB Status'
   echo
   read -p "Email new users Credentials & SSH key to your system’s administrator. [y/n]?: " -n 1 -r
   echo

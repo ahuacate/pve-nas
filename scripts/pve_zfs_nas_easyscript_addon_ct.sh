@@ -137,7 +137,7 @@ NC=$'\033[0m'
 printf '\033[8;40;120t'
 
 # Script Variables
-SECTION_HEAD="PVE ZFS NAS"
+SECTION_HEAD="PVE NAS"
 
 # Set Temp Folder
 if [ -z "${TEMP_DIR+x}" ]; then
@@ -169,7 +169,7 @@ fi
 # Setting Variables
 
 
-#### Action a PVE ZFS NAS Addon Task ####
+#### Action a PVE NAS Addon Task ####
 section "$SECTION_HEAD -  Action a Add-on Task"
 
 # Input list. Add add-on actions or services here. (adhere to the 4 fields - TYPE|LABEL|DESCRIPTION|URL)
@@ -179,7 +179,7 @@ Addon|Power User Account|member of medialab, homelab or privatelab|https://raw.g
 Addon|Kodi Rsync User Account|special user for Kodi player data rsync|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_nfs_nas_add_rsyncuser_ct.sh
 Addon|SSMTP Server| email server for sending PVE email alerts|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_install_ssmtp_ct.sh
 Addon|ProFTPd Server|a sFTP server for Power & Jailed user accounts|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_install_proftpd_ct.sh
-Addon|PVE ZFS NAS OS Version Release Updater|backup critical data first|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_version_updater_ct.sh
+Addon|PVE NAS OS Version Release Updater|backup critical data first|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_version_updater_ct.sh
 New CT|Medialab-Rsync|create a new PVE Medialab-Rsync CT server|https://test
 EOF
 

@@ -84,7 +84,7 @@ NC=$'\033[0m'
 printf '\033[8;40;120t'
 
 # Script Variables
-SECTION_HEAD="PVE ZFS NAS"
+SECTION_HEAD="PVE NAS"
 
 # Set Temp Folder
 if [ -z "${TEMP_DIR+x}" ]; then
@@ -108,7 +108,7 @@ fi
 #### Update & Upgrade ####
 section "$SECTION_HEAD - Upgrade your System OS and software packages."
 
-box_out '#### PLEASE READ CAREFULLY ####' '' 'This program will fully update and upgrade your PVE ZFS NAS container.' 'User input is required. The program may create, edit and/or change system' 'files on your PVE ZFS NAS. When an optional default setting is provided' 'you may accept the default by pressing ENTER on your keyboard or' 'change it to your preferred value.'
+box_out '#### PLEASE READ CAREFULLY ####' '' 'This program will fully update and upgrade your PVE NAS container.' 'User input is required. The program may create, edit and/or change system' 'files on your PVE NAS. When an optional default setting is provided' 'you may accept the default by pressing ENTER on your keyboard or' 'change it to your preferred value.'
 echo
 read -p "Proceed with upgrading ${WHITE}$(echo ${HOSTNAME^^})${NC} OS and software packages [y/n]? " -n 1 -r
 echo
@@ -140,7 +140,7 @@ section "$SECTION_HEAD - Perform a full Ubuntu OS release upgrade."
     msg "Checking for a new Ubuntu OS release..."
     info "$(do-release-upgrade -c | sed '$d' | sed '1d') (Current Vers: $(lsb_release -d | awk -F'\t' '{print $2}'))"
     echo
-    box_out '#### PLEASE READ CAREFULLY ####' '' 'A Ubuntu OS release upgrade is available. This is a major upgrade.' 'It is recommended you perform a PVE CT backup before performing this upgrade.' '' 'User input is required. The update will create, edit and/or change system' 'files on your PVE ZFS NAS CT. When an optional default setting is provided' 'you may accept the default by pressing ENTER on your keyboard or' 'change it to your preferred value.'
+    box_out '#### PLEASE READ CAREFULLY ####' '' 'A Ubuntu OS release upgrade is available. This is a major upgrade.' 'It is recommended you perform a PVE CT backup before performing this upgrade.' '' 'User input is required. The update will create, edit and/or change system' 'files on your PVE NAS CT. When an optional default setting is provided' 'you may accept the default by pressing ENTER on your keyboard or' 'change it to your preferred value.'
     echo
     read -p "Proceed with upgrading ${WHITE}$(echo ${HOSTNAME^^})${NC} Ubuntu OS [y/n]? " -n 1 -r
     echo

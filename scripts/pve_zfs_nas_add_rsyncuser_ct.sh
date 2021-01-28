@@ -62,7 +62,7 @@ NC=$'\033[0m'
 printf '\033[8;40;120t'
 
 # Script Variables
-SECTION_HEAD="PVE ZFS NAS"
+SECTION_HEAD="PVE NAS"
 
 # Set Temp Folder
 if [ -z "${TEMP_DIR+x}" ]; then
@@ -95,11 +95,15 @@ USER="kodi_rsync"
 GROUP="chrootjail"
 
 
-#### Creating PVE ZFS NAS Jailed Users ####
+#### Creating PVE NAS Jailed Users ####
 if [ -z "${NEW_KODI_RSYNC_USER+x}" ] && [ -z "${PARENT_EXEC_NEW_KODI_RSYNC_USER+x}" ]; then
   section "$SECTION_HEAD -  Create a kodi_rsync user account"
   echo
-  box_out '#### PLEASE READ CAREFULLY - KODI_RSYNC USER ####' '' '"kodi_rsync" is a special user account created for synchronising a portable' 'or remote kodi media player with a hard disk to your PVE ZFS NAS media' 'video, music and photo libraries. Connection is by RSSH rsync.' 'This is for persons wanting a portable copy of their media for travelling to' 'remote locations where there is limited bandwidth or no internet access.' '' '"kodi_rsync" is NOT a media server for Kodi devices. If you want a home media' 'server then create our PVE Jellyfin CT.' '' 'Our rsync script will securely connect to your PVE ZFS NAS and;' '' '  --  rsync mirror your selected media library to your kodi player USB disk.' '  --  copy your latest media only to your kodi player USB disk.' '  --  remove the oldest media to fit newer media.' '  --  fill your USB disk to a limit set by you.' '' 'The first step involves creating a new user called "kodi_rsync" on your PVE ZFS NAS' 'which has limited and restricted permissions granting rsync read access only' 'to your media libraries.' 'The second step, performed at a later stage, is setting up a CoreElec or' 'LibreElec player hardware with a USB hard disk and installing our' 'rsync scripts along with your PVE ZFS NAS user "kodi_rsync" private ssh ed25519 key.'
+  box_out '#### PLEASE READ CAREFULLY - KODI_RSYNC USER ####' '' '"kodi_rsync" is a special user account created for synchronising a portable' 'or remote kodi media player with a hard disk to your PVE NAS
+ media' 'video, music and photo libraries. Connection is by RSSH rsync.' 'This is for persons wanting a portable copy of their media for travelling to' 'remote locations where there is limited bandwidth or no internet access.' '' '"kodi_rsync" is NOT a media server for Kodi devices. If you want a home media' 'server then create our PVE Jellyfin CT.' '' 'Our rsync script will securely connect to your PVE NAS
+ and;' '' '  --  rsync mirror your selected media library to your kodi player USB disk.' '  --  copy your latest media only to your kodi player USB disk.' '  --  remove the oldest media to fit newer media.' '  --  fill your USB disk to a limit set by you.' '' 'The first step involves creating a new user called "kodi_rsync" on your PVE NAS
+' 'which has limited and restricted permissions granting rsync read access only' 'to your media libraries.' 'The second step, performed at a later stage, is setting up a CoreElec or' 'LibreElec player hardware with a USB hard disk and installing our' 'rsync scripts along with your PVE NAS
+ user "kodi_rsync" private ssh ed25519 key.'
   echo
   warn "The kodi_rsync based user is being deprecated. It is replaced with our\nPVE medialab rsync server CT (Recommended)."
   echo
@@ -232,7 +236,8 @@ if [ $PRE_CHECK_INSTALL = 0 ]; then
   section "$SECTION_HEAD - Installing Prerequisites."
   #### Configure SSH Server ####
   if [ $SSHD_STATUS = 1 ] && [ $PRE_CHECK_01 = 1 ]; then
-    box_out '#### PLEASE READ CAREFULLY - ENABLE SSH SERVER ####' '' 'If you want to use kodi_rsync to connect to your PVE ZFS NAS then' 'your SSH Server must be enabled. We also recommend you change the' 'default SSH port 22 for added security.'
+    box_out '#### PLEASE READ CAREFULLY - ENABLE SSH SERVER ####' '' 'If you want to use kodi_rsync to connect to your PVE NAS
+   then' 'your SSH Server must be enabled. We also recommend you change the' 'default SSH port 22 for added security.'
     echo
     read -p "Enable SSH Server on your $SECTION_HEAD[y/n]? " -n 1 -r
     echo
@@ -389,7 +394,7 @@ fi
 #### Creating Bind Mounts ####
 section "$SECTION_HEAD - Creating Bind Mounts."
 
-box_out '#### PLEASE READ CAREFULLY - PRIVATE MEDIA LIBRARIES ####' '' 'PVE ZFS NAS user accounts have the option of sharing their personal photo' 'and home video media with other users. "kodi_rsync" can read' 'and rsync this media too if you want.' '' '  --  /srv/"hostname"/photo/"user_photo"' '  --  /srv/"hostname"/video/homevideo/"user_homevideo"' '' 'If you DO NOT want "kodi_rsync" to read and rsync these folders type "n" in' 'the next step.'
+box_out '#### PLEASE READ CAREFULLY - PRIVATE MEDIA LIBRARIES ####' '' 'PVE NAS user accounts have the option of sharing their personal photo' 'and home video media with other users. "kodi_rsync" can read' 'and rsync this media too if you want.' '' '  --  /srv/"hostname"/photo/"user_photo"' '  --  /srv/"hostname"/video/homevideo/"user_homevideo"' '' 'If you DO NOT want "kodi_rsync" to read and rsync these folders type "n" in' 'the next step.'
 echo
 read -p "Grant kodi_rsync access to your personal photos and videos [y/n]? " -n 1 -r
 echo

@@ -61,7 +61,7 @@ NC=$'\033[0m'
 printf '\033[8;40;120t'
 
 # Script Variables
-SECTION_HEAD="Proxmox ZFS NAS"
+SECTION_HEAD="PVE NAS"
 
 # Set Temp Folder
 if [ -z "${TEMP_DIR+x}" ]; then

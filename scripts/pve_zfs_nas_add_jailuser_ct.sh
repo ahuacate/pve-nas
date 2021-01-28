@@ -61,7 +61,7 @@ NC=$'\033[0m'
 printf '\033[8;40;120t'
 
 # Script Variables
-SECTION_HEAD="PVE ZFS NAS"
+SECTION_HEAD="PVE NAS"
 
 # Set Temp Folder
 if [ -z "${TEMP_DIR+x}" ]; then
@@ -85,11 +85,11 @@ HOME_BASE="$CHROOT/homes/"
 GROUP="chrootjail"
 
 
-#### Creating PVE ZFS NAS Jailed Users ####
+#### Creating PVE NAS Jailed Users ####
 if [ -z "${NEW_JAIL_USER+x}" ] && [ -z "${PARENT_EXEC_NEW_JAIL_USER+x}" ]; then
-  section "PVE ZFS NAS - Create Restricted and Jailed User Accounts"
+  section "PVE NAS - Create Restricted and Jailed User Accounts"
   echo
-box_out '#### PLEASE READ CAREFULLY - RESTRICTED & JAILED USER ACCOUNTS ####' '' 'Every new user is restricted or jailed within their own home folder. In Linux' 'this is called a chroot jail. But you can select the level of restrictions which' 'are applied to each newly created user. This technique can be quite useful if' 'you want a particular user to be provided with a limited system environment,' 'limited folder access and at the same time keep them separate from your' 'main server system and other personal data.' '' 'The chroot technique will automatically jail selected users belonging' 'to the "chrootjail" user group upon ssh or sftp login.' '' 'An example of a jailed user is a person who has remote access to your' 'PVE ZFS NAS but is restricted to your video library (TV, movies, documentary),' 'public folders and their home folder for cloud storage only.' 'Remote access to your PVE ZFS NAS is restricted to sftp, ssh and rsync' 'using private SSH ed25519 encrypted keys.' '' 'Default "chrootjail" group permission options are:' '' '  --  GROUP NAME     -- USER NAME' '      "chrootjail"   -- /srv/hostname/homes/chrootjail/"username_injail"' '' 'Selectable jail folder permission levels for each new user:' '' '  --  LEVEL 1        -- FOLDER' '      -rwx------     -- /srv/hostname/homes/chrootjail/"username_injail"' '                     -- Bind Mounts - mounted at ~/public folder' '      -rwxrwxrw-     -- /srv/hostname/homes/chrootjail/"username_injail"/public' '' '  --  LEVEL 2        -- FOLDER' '      -rwx------     -- /srv/hostname/homes/chrootjail/"username_injail"' '                     -- Bind Mounts - mounted at ~/share folder' '      -rwxrwxrw-     -- /srv/hostname/downloads/user/"username_downloads"' '      -rwxrwxrw-     -- /srv/hostname/photo/"username_photo"' '      -rwxrwxrw-     -- /srv/hostname/public' '      -rwxrwxrw-     -- /srv/hostname/video/homevideo/"username_homevideo"' '      -rwxr-----     -- /srv/hostname/video/movies' '      -rwxr-----     -- /srv/hostname/video/tv' '      -rwxr-----     -- /srv/hostname/video/documentary' '' '  --  LEVEL 3        -- FOLDER' '      -rwx------     -- /srv/"hostname"/homes/chrootjail/"username_injail"' '                     -- Bind Mounts - mounted at ~/share folder' '      -rwxr-----     -- /srv/hostname/audio' '      -rwxr-----     -- /srv/hostname/books' '      -rwxrwxrw-     -- /srv/hostname/downloads/user/"username_downloads"' '      -rwxr-----     -- /srv/hostname/music' '      -rwxrwxrw-     -- /srv/hostname/photo/"username_photo"' '      -rwxrwxrw-     -- /srv/hostname/public' '      -rwxrwxrw-     -- /srv/hostname/video/homevideo/"username_homevideo"' '      -rwxr-----     -- /srv/hostname/video (All)' '' 'All Home folders are automatically suffixed: "username_injail".'
+box_out '#### PLEASE READ CAREFULLY - RESTRICTED & JAILED USER ACCOUNTS ####' '' 'Every new user is restricted or jailed within their own home folder. In Linux' 'this is called a chroot jail. But you can select the level of restrictions which' 'are applied to each newly created user. This technique can be quite useful if' 'you want a particular user to be provided with a limited system environment,' 'limited folder access and at the same time keep them separate from your' 'main server system and other personal data.' '' 'The chroot technique will automatically jail selected users belonging' 'to the "chrootjail" user group upon ssh or sftp login.' '' 'An example of a jailed user is a person who has remote access to your' 'PVE NAS but is restricted to your video library (TV, movies, documentary),' 'public folders and their home folder for cloud storage only.' 'Remote access to your PVE NAS is restricted to sftp, ssh and rsync' 'using private SSH ed25519 encrypted keys.' '' 'Default "chrootjail" group permission options are:' '' '  --  GROUP NAME     -- USER NAME' '      "chrootjail"   -- /srv/hostname/homes/chrootjail/"username_injail"' '' 'Selectable jail folder permission levels for each new user:' '' '  --  LEVEL 1        -- FOLDER' '      -rwx------     -- /srv/hostname/homes/chrootjail/"username_injail"' '                     -- Bind Mounts - mounted at ~/public folder' '      -rwxrwxrw-     -- /srv/hostname/homes/chrootjail/"username_injail"/public' '' '  --  LEVEL 2        -- FOLDER' '      -rwx------     -- /srv/hostname/homes/chrootjail/"username_injail"' '                     -- Bind Mounts - mounted at ~/share folder' '      -rwxrwxrw-     -- /srv/hostname/downloads/user/"username_downloads"' '      -rwxrwxrw-     -- /srv/hostname/photo/"username_photo"' '      -rwxrwxrw-     -- /srv/hostname/public' '      -rwxrwxrw-     -- /srv/hostname/video/homevideo/"username_homevideo"' '      -rwxr-----     -- /srv/hostname/video/movies' '      -rwxr-----     -- /srv/hostname/video/tv' '      -rwxr-----     -- /srv/hostname/video/documentary' '' '  --  LEVEL 3        -- FOLDER' '      -rwx------     -- /srv/"hostname"/homes/chrootjail/"username_injail"' '                     -- Bind Mounts - mounted at ~/share folder' '      -rwxr-----     -- /srv/hostname/audio' '      -rwxr-----     -- /srv/hostname/books' '      -rwxrwxrw-     -- /srv/hostname/downloads/user/"username_downloads"' '      -rwxr-----     -- /srv/hostname/music' '      -rwxrwxrw-     -- /srv/hostname/photo/"username_photo"' '      -rwxrwxrw-     -- /srv/hostname/public' '      -rwxrwxrw-     -- /srv/hostname/video/homevideo/"username_homevideo"' '      -rwxr-----     -- /srv/hostname/video (All)' '' 'All Home folders are automatically suffixed: "username_injail".'
   echo
   read -p "Create restricted jailed user accounts on your $SECTION_HEAD [y/n]? " -n 1 -r
   echo
@@ -219,9 +219,9 @@ if [ $PRE_CHECK_INSTALL = 0 ]; then
   section "$SECTION_HEAD - Installing Prerequisites."
   #### Configure SSH Server ####
   if [ $SSHD_STATUS = 1 ] && [ $PRE_CHECK_01 = 1 ]; then
-    box_out '#### PLEASE READ CAREFULLY - ENABLE SSH SERVER ####' '' 'If you want to use SSH (Rsync/SFTP) to connect to your PVE ZFS NAS then' 'your SSH Server must be enabled. You need SSH to perform any' 'of the following tasks:' '' '  --  Secure SSH Connection to the PVE ZFS NAS.' '  --  Perform a secure RSync Backup to the PVE ZFS NAS.' '' 'We also recommend you change the default SSH port 22 for added security.' '' 'For added security we restrict all SSH, RSYNC and SFTP access for all' 'chrootjail users to their given home folder only.'
+    box_out '#### PLEASE READ CAREFULLY - ENABLE SSH SERVER ####' '' 'If you want to use SSH (Rsync/SFTP) to connect to your PVE NAS then' 'your SSH Server must be enabled. You need SSH to perform any' 'of the following tasks:' '' '  --  Secure SSH Connection to the PVE NAS.' '  --  Perform a secure RSync Backup to the PVE NAS.' '' 'We also recommend you change the default SSH port 22 for added security.' '' 'For added security we restrict all SSH, RSYNC and SFTP access for all' 'chrootjail users to their given home folder only.'
     echo
-    read -p "Enable SSH Server on your PVE ZFS NAS (NAS) [y/n]? " -n 1 -r
+    read -p "Enable SSH Server on your PVE NAS (NAS) [y/n]? " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
       SSHD_STATUS=0
@@ -262,7 +262,7 @@ while [[ "$REPLY" != ^[Nn]$ ]] && [ "$NEW_JAIL_USER" = 0 ]; do
     warn "$jail_username already exists. Please try again."
   done
   echo
-  msg "Every new jailed user has a private Home folder and a optional level of access\nto other PVE ZFS NAS shared folders. Choosing the level of shared folder access\ndepends restrictions you want to apply to the new user. Now select your new\njailed user level of access to shared folders level."
+  msg "Every new jailed user has a private Home folder and a optional level of access\nto other PVE NAS shared folders. Choosing the level of shared folder access\ndepends restrictions you want to apply to the new user. Now select your new\njailed user level of access to shared folders level."
   LEVEL01="Home + Shared Public folder only." >/dev/null
   LEVEL02="Home + Shared Public, Photo, Video (Movies, TV, Documentary, Homevideo) folders." >/dev/null
   LEVEL03="Home + Shared Public, Photo, Video (all), Music, Audio & Books folders." >/dev/null
@@ -614,7 +614,7 @@ echo
 if [ $(dpkg -s ssmtp >/dev/null 2>&1; echo $?) = 0 ] && [ $(grep -qs "^root:*" /etc/ssmtp/revaliases >/dev/null; echo $?) = 0 ]; then
   section "$SECTION_HEAD - Email User Credentials & SSH keys"
   echo
-  box_out '#### PLEASE READ CAREFULLY - EMAIL NEW USER CREDENTIALS ####' '' 'You can email each new users login credentials and ssh keys to the' 'system administrator. The system administrator may then forward the email(s)' 'to each new user.' '' 'Each email will include the following information and attachments:' '' '  --  Username' '  --  Password' '  --  User Group' '  --  Folder Permission Level' '  --  Private SSH Key (Standard)' '  --  Private SSH Key (PPK Version)' '  --  PVE ZFS NAS IP Address' '  --  SMB Status'
+  box_out '#### PLEASE READ CAREFULLY - EMAIL NEW USER CREDENTIALS ####' '' 'You can email each new users login credentials and ssh keys to the' 'system administrator. The system administrator may then forward the email(s)' 'to each new user.' '' 'Each email will include the following information and attachments:' '' '  --  Username' '  --  Password' '  --  User Group' '  --  Folder Permission Level' '  --  Private SSH Key (Standard)' '  --  Private SSH Key (PPK Version)' '  --  PVE NAS IP Address' '  --  SMB Status'
   echo
   read -p "Email new users Credentials & SSH key to your system’s administrator. [y/n]?: " -n 1 -r
   echo
@@ -622,7 +622,7 @@ if [ $(dpkg -s ssmtp >/dev/null 2>&1; echo $?) = 0 ] && [ $(grep -qs "^root:*" /
     cat ${NEW_USERS} | while read USER PASSWORD GROUP JAIL_TYPE
     do
     msg "Sending $USER SSH key to $(grep -r "root=.*" /etc/ssmtp/ssmtp.conf | grep -v "#" | sed -e 's/root=//g')..."
-    echo -e "Subject: Login Credentials for $USER.\n\n==========   LOGIN CREDENTIALS FOR USERNAME : ${USER^^}   ==========\n \n \nThe users private SSH keys are attached. SSH keys should never be accessible to anyone other than the person who will be using them.\n \nThe users ($USER) login credentials details are:\n    Username: $USER\n    Password: $PASSWORD\n    User Group: $GROUP\n    Folder Permission Level: $(if [ ${JAIL_TYPE} = level01 ]; then echo -e $LEVEL01; elif [ ${JAIL_TYPE} = level02 ]; then echo -e $LEVEL02; elif [ ${JAIL_TYPE} = level03 ]; then echo -e $LEVEL03; fi)\n    Private SSH Key (Standard): id_${USER,,}_ed25519\n    Private SSH Key (PPK version): id_${USER,,}_ed25519.ppk\n    PVE ZFS NAS IP Address: $(hostname -I)\n    SMB Status: Enabled" | (cat - && uuencode ${HOME_BASE}${USER}/.ssh/id_${USER,,}_ed25519 id_${USER,,}_ed25519) | (cat - && uuencode ${HOME_BASE}${USER}/.ssh/id_${USER,,}_ed25519.ppk id_${USER,,}_ed25519.ppk) | ssmtp root
+    echo -e "Subject: Login Credentials for $USER.\n\n==========   LOGIN CREDENTIALS FOR USERNAME : ${USER^^}   ==========\n \n \nThe users private SSH keys are attached. SSH keys should never be accessible to anyone other than the person who will be using them.\n \nThe users ($USER) login credentials details are:\n    Username: $USER\n    Password: $PASSWORD\n    User Group: $GROUP\n    Folder Permission Level: $(if [ ${JAIL_TYPE} = level01 ]; then echo -e $LEVEL01; elif [ ${JAIL_TYPE} = level02 ]; then echo -e $LEVEL02; elif [ ${JAIL_TYPE} = level03 ]; then echo -e $LEVEL03; fi)\n    Private SSH Key (Standard): id_${USER,,}_ed25519\n    Private SSH Key (PPK version): id_${USER,,}_ed25519.ppk\n    PVE NAS IP Address: $(hostname -I)\n    SMB Status: Enabled" | (cat - && uuencode ${HOME_BASE}${USER}/.ssh/id_${USER,,}_ed25519 id_${USER,,}_ed25519) | (cat - && uuencode ${HOME_BASE}${USER}/.ssh/id_${USER,,}_ed25519.ppk id_${USER,,}_ed25519.ppk) | ssmtp root
     info "Email sent."
     done
   else
