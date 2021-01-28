@@ -69,20 +69,20 @@ TEMP_DIR=$(mktemp -d)
 pushd $TEMP_DIR >/dev/null
 
 # Command to run script
-# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_setup_ct_20.sh)"
+# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_setup_ct.sh)"
 
 # Script Variables
 SECTION_HEAD="PVE ZFS NAS"
 
 # Download external scripts
-wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_jailuser_ct_20.sh
-wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_poweruser_ct_20.sh
-wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_rsyncuser_ct_20.sh
+wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_jailuser_ct.sh
+wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_poweruser_ct.sh
+wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_rsyncuser_ct.sh
 wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_base_folder_setup
 wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_base_subfolder_setup
-wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_chroot_programs_ct_20
-wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_install_ssmtp_ct_20.sh
-wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_install_proftpd_ct_20.sh
+wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_chroot_programs_ct
+wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_install_ssmtp_ct.sh
+wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_install_proftpd_ct.sh
 
 
 
@@ -201,10 +201,10 @@ cp -f /lib64/ld-linux-x86-64.so.2 $CHROOT/lib64/ >/dev/null
 cp -f /bin/bash $CHROOT/bin/ >/dev/null
 cp -f /lib/x86_64-linux-gnu/libnsl.so.1 $CHROOT/lib/x86_64-linux-gnu/ >/dev/null
 cp -f /lib/x86_64-linux-gnu/libnss_* $CHROOT/lib/x86_64-linux-gnu/ >/dev/null
-for i in $( ldd $(cat pve_zfs_nas_chroot_programs_ct_20 | awk '{ print $1 }') | grep -v dynamic | cut -d " " -f 3 | sed 's/://' | sort | uniq )
+for i in $( ldd $(cat pve_zfs_nas_chroot_programs_ct | awk '{ print $1 }') | grep -v dynamic | cut -d " " -f 3 | sed 's/://' | sort | uniq )
   do
     sudo cp -f --parents $i $CHROOT
-done < pve_zfs_nas_chroot_programs_ct_20
+done < pve_zfs_nas_chroot_programs_ct
 # ARCH amd64
 if [ -f /lib64/ld-linux-x86-64.so.2 ]; then
    cp -f --parents /lib64/ld-linux-x86-64.so.2 $CHROOT
@@ -691,8 +691,8 @@ echo
 
 # Run FroFTPd installation script
 export PARENT_EXEC_INSTALL_PROFTPD=0 >/dev/null
-chmod +x pve_zfs_nas_install_proftpd_ct_20.sh
-./pve_zfs_nas_install_proftpd_ct_20.sh
+chmod +x pve_zfs_nas_install_proftpd_ct.sh
+./pve_zfs_nas_install_proftpd_ct.sh
 
 
 #### Install and Configure Webmin ####
@@ -730,8 +730,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   msg "Installing ssmtp..."
   export INSTALL_SSMTP=0 >/dev/null
   export PARENT_EXEC_INSTALL_SSMTP=0 >/dev/null
-  chmod +x pve_zfs_nas_install_ssmtp_ct_20.sh
-  ./pve_zfs_nas_install_ssmtp_ct_20.sh
+  chmod +x pve_zfs_nas_install_ssmtp_ct.sh
+  ./pve_zfs_nas_install_ssmtp_ct.sh
 else
   INSTALL_SSMTP=1 >/dev/null
   info "You have chosen to skip this step."
@@ -751,8 +751,8 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
 	export NEW_POWER_USER=0 >/dev/null
   export PARENT_EXEC_NEW_POWER_USER=0 >/dev/null
-  chmod +x pve_zfs_nas_add_poweruser_ct_20.sh
-  ./pve_zfs_nas_add_poweruser_ct_20.sh
+  chmod +x pve_zfs_nas_add_poweruser_ct.sh
+  ./pve_zfs_nas_add_poweruser_ct.sh
 else
 	NEW_POWER_USER=1 >/dev/null
 	info "You have chosen to skip this step."
@@ -771,8 +771,8 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
 	export NEW_JAIL_USER=0 >/dev/null
   export PARENT_EXEC_NEW_JAIL_USER=0 >/dev/null
-  chmod +x pve_zfs_nas_add_jailuser_ct_20.sh
-  ./pve_zfs_nas_add_jailuser_ct_20.sh
+  chmod +x pve_zfs_nas_add_jailuser_ct.sh
+  ./pve_zfs_nas_add_jailuser_ct.sh
 else
 	NEW_JAIL_USER=1 >/dev/null
 	info "You have chosen to skip this step."
@@ -793,8 +793,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   msg "Creating user kodi_rsync..."
   export NEW_KODI_RSYNC_USER=0 >/dev/null
   export PARENT_EXEC_NEW_KODI_RSYNC_USER=0 >/dev/null
-  chmod +x pve_zfs_nas_add_rsyncuser_ct_20.sh
-  ./pve_zfs_nas_add_rsyncuser_ct_20.sh
+  chmod +x pve_zfs_nas_add_rsyncuser_ct.sh
+  ./pve_zfs_nas_add_rsyncuser_ct.sh
 else
   NEW_KODI_RSYNC_USER=1 >/dev/null
   info "You have chosen to skip this step."

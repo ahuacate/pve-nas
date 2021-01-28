@@ -76,7 +76,7 @@ fi
 # Download external scripts
 
 # Command to run script
-# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_jailuser_ct_20.sh)"
+# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_jailuser_ct.sh)"
 
 
 # Setting Variables

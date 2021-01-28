@@ -164,7 +164,7 @@ fi
 # Download external scripts
 
 # Command to run script
-# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_easyscript_addon_ct_20.sh)"
+# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_easyscript_addon_ct.sh)"
 
 # Setting Variables
 
@@ -174,12 +174,12 @@ section "$SECTION_HEAD -  Action a Add-on Task"
 
 # Input list. Add add-on actions or services here. (adhere to the 4 fields - TYPE|LABEL|DESCRIPTION|URL)
 cat <<-EOF > input_list
-Addon|Jailed User Account|a Home folder jailed user (chroot user)|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_jailuser_ct_20.sh
-Addon|Power User Account|member of medialab, homelab or privatelab|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_poweruser_ct_20.sh
-Addon|Kodi Rsync User Account|special user for Kodi player data rsync|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_nfs_nas_add_rsyncuser_ct_20.sh
-Addon|SSMTP Server| email server for sending PVE email alerts|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_install_ssmtp_ct_20.sh
-Addon|ProFTPd Server|a sFTP server for Power & Jailed user accounts|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_install_proftpd_ct_20.sh
-Addon|PVE ZFS NAS OS Version Release Updater|backup critical data first|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_version_updater_ct_20.sh
+Addon|Jailed User Account|a Home folder jailed user (chroot user)|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_jailuser_ct.sh
+Addon|Power User Account|member of medialab, homelab or privatelab|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_poweruser_ct.sh
+Addon|Kodi Rsync User Account|special user for Kodi player data rsync|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_nfs_nas_add_rsyncuser_ct.sh
+Addon|SSMTP Server| email server for sending PVE email alerts|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_install_ssmtp_ct.sh
+Addon|ProFTPd Server|a sFTP server for Power & Jailed user accounts|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_install_proftpd_ct.sh
+Addon|PVE ZFS NAS OS Version Release Updater|backup critical data first|https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_version_updater_ct.sh
 New CT|Medialab-Rsync|create a new PVE Medialab-Rsync CT server|https://test
 EOF
 

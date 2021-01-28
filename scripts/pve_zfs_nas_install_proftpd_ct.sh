@@ -79,7 +79,7 @@ wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/p
 
 
 # Command to run script
-# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_rsyncuser_ct_20.sh)"
+# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_add_rsyncuser_ct.sh)"
 
 
 # Setting Variables

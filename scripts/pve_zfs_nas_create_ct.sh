@@ -129,16 +129,16 @@ CT_HOSTNAME_VAR="nas-01"
 CT_HOSTNAME_VAR=${CT_HOSTNAME_VAR,,}
 
 # Download external scripts
-wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_setup_ct_20.sh
+wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_setup_ct.sh
 
 #########################################################################################
 # This script is for creating your PVE ZFS File Server (NAS) (nas-01) Container         #
-#                                                                                       #
+# Built on Ubuntu OS                                                                    #
 # Tested on Proxmox Version : pve-manager/6.1-3/37248ce6 (running kernel: 5.3.10-1-pve) #
 #########################################################################################
 
 # Command to run script
-# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_create_ct_20.sh)"
+# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_create_ct.sh)"
 
 # Clear the screen
 clear
@@ -162,7 +162,7 @@ apt -y autoremove > /dev/null 2>&1
 #### Introduction ####
 section "$SECTION_HEAD - Introduction."
 
-box_out '#### PLEASE READ CAREFULLY ####' '' 'This script will create a Proxmox (PVE) ZFS NAS container.' 'User input is required. The script may create, edit and/or change system' 'files on your PVE host. When an optional default setting is provided' 'you may accept the default by pressing ENTER on your keyboard or' 'change it to your preferred value.' '' 'You should have your reprequisites ready and all credentials, such as SSMTP' 'server and mailgun credentials, readily available.' 'The PVE ZFS NAS will be configured with NFS4.1, Samba and Webmin so you can manage your PVE ZFS NAS.'
+box_out '#### PLEASE READ CAREFULLY ####' '' 'This script will create a Proxmox (PVE) ZFS NAS container.' 'User input is required. The script may create, edit and/or change system' 'files on your PVE host. When an optional default setting is provided' 'you may accept the default by pressing ENTER on your keyboard or' 'change it to your preferred value.' '' 'You should have your prerequisites ready and all credentials, such as SSMTP' 'server and Mailgun credentials, readily available.' 'The PVE ZFS NAS will be configured with NFS4.1, Samba and Webmin so you can manage your PVE ZFS NAS.'
 echo
 read -p "Proceed to create a $SECTION_HEAD [y/n]? " -n 1 -r
 echo
@@ -1421,8 +1421,8 @@ echo "#!/usr/bin/env bash" > pve_zfs_nas_setup_ct_variables.sh
 echo "POOL=$POOL" >> pve_zfs_nas_setup_ct_variables.sh
 echo "CT_HOSTNAME=$CT_HOSTNAME" >> pve_zfs_nas_setup_ct_variables.sh
 pct push $CTID pve_zfs_nas_setup_ct_variables.sh /tmp/pve_zfs_nas_setup_ct_variables.sh
-pct push $CTID pve_zfs_nas_setup_ct_20.sh pve_zfs_nas_setup_ct_20.sh -perms 755
-pct exec $CTID -- bash -c "/pve_zfs_nas_setup_ct_20.sh"
+pct push $CTID pve_zfs_nas_setup_ct.sh pve_zfs_nas_setup_ct.sh -perms 755
+pct exec $CTID -- bash -c "/pve_zfs_nas_setup_ct.sh"
 
 
 # # Get network details and show completion message
