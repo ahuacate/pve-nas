@@ -293,7 +293,7 @@ All Home folders are automatically suffixed: `username_injail`.
 
 ## 3.3. Create a KODI_RSYNC User
 
-"kodi_rsync" is a special user account created for synchronising a portable or remote kodi media player with a hard disk to your PVE NAS media video, music and photo libraries. Connection is by rSSH rSync. This is for persons wanting a portable copy of their media for travelling to remote locations where there is limited bandwidth or no internet access.
+"kodi_rsync" is a special user account created for synchronising a portable or remote kodi media player with a hard disk to your PVE NAS video, music and photo libraries. Connection is by rSSH rSync. This is for persons wanting a portable copy of their media for travelling to remote locations where there is limited bandwidth or no internet access.
 
 "kodi_rsync" is NOT a media server for Kodi devices. If you want a home media server then create our PVE Jellyfin CT.  Our rSync script will securely connect to your PVE NAS and;
 - rsync mirror your selected media library to your kodi player USB disk
@@ -302,4 +302,3 @@ All Home folders are automatically suffixed: `username_injail`.
 - fill your USB disk to a limit set by you.
 
 The first step involves creating a new user called "kodi_rsync" on your PVE NAS which has limited and restricted permissions granting rSync read access only to your media libraries. The second step, performed at a later stage, is setting up a CoreElec or LibreElec player hardware with a USB hard disk and installing our rSync client scripts along with your PVE NAS user "kodi_rsync" private ssh ed25519 key.
-
