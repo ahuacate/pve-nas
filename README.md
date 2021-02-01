@@ -185,7 +185,7 @@ Having a working SMTP server makes life much easier. For example, you can receiv
 
 You will be asked for the credentials of a SMTP Server. You can use GMail, GoDaddy, AWS or any SMTP server credentials (i.e address, port, username and password, encryption type etc.
 
-But we recommend you create a account at [Mailgun](mailgun.com) to relay your NAS system emails to your designated administrator. With [Mailgun](mailgun.com) you are not potentially exposing your private email server credentials held within a text file on your NAS. This is a added layer of security.
+But we recommend you create a account at [Mailgun](https://mailgun.com) to relay your NAS system emails to your designated administrator. With [Mailgun](https://mailgun.com) you are not potentially exposing your private email server credentials held within a text file on your NAS. This is a added layer of security.
 
 ## 2.3. NAS Hostname
 
