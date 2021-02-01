@@ -144,7 +144,7 @@ Our [PVE Host Build](https://github.com/ahuacate/pve-host-build#302-pve-os-insta
 
 ### 1.2.1. PVE OS SSD Partition Setup
 
-This is the most cost effective method of deploying ZFS cache. Instructions are in our [PVE Host Build](https://github.com/ahuacate/pve-host-build#12-primary-host---creating-ssd-partitions-for-zfs-cache) guide.
+This is the most cost effective method of deploying ZFS cache. Instructions are in our [PVE Host Build](https://github.com/ahuacate/pve-host-setup#12-primary-host---creating-ssd-partitions-for-zfs-cache) guide.
 
 ### 1.2.2. Dedicated SSD ZFS Cache Setup
 
