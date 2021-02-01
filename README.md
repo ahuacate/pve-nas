@@ -140,15 +140,15 @@ Whether you use partitions on your PVE host SSD or install dedicated SSDs, ZFS c
 - ZFS Intent Log, or ZIL, to buffer WRITE operations.
 - ARC and L2ARC which are meant for READ operations.
 
-Our [PVE Host Build](https://github.com/ahuacate/pve-host-build#302-pve-os-install---primary-host---1-2x-ssd-os--1-2x-ssd-zfs-cache---zfs-file-server) guide has more detail.
+Our [PVE Host Setup](https://github.com/ahuacate/pve-host-setup#302-pve-os-install---primary-host---1-2x-ssd-os--1-2x-ssd-zfs-cache---zfs-file-server) guide has more detail.
 
 ### 1.2.1. PVE OS SSD Partition Setup
 
-This is the most cost effective method of deploying ZFS cache. Instructions are in our [PVE Host Build](https://github.com/ahuacate/pve-host-setup#12-primary-host---creating-ssd-partitions-for-zfs-cache) guide.
+This is the most cost effective method of deploying ZFS cache. Instructions are in our [PVE Host Setup](https://github.com/ahuacate/pve-host-setup#12-primary-host---creating-ssd-partitions-for-zfs-cache) guide.
 
 ### 1.2.2. Dedicated SSD ZFS Cache Setup
 
-A dedicated ZFS cache SSD setup is the more costly method with no net performance gain. Instructions are in our [PVE Host Build](https://github.com/ahuacate/pve-host-build#122-primary-host---partition-dedicated-zfs-cache-ssd---zfs-file-server) guide.
+A dedicated ZFS cache SSD setup is the more costly method with no net performance gain. Instructions are in our [PVE Host Setup](https://github.com/ahuacate/pve-host-setup#122-primary-host---partition-dedicated-zfs-cache-ssd---zfs-file-server) guide.
 
 ## 1.3. Installation of ZFS Storage Disks
 
