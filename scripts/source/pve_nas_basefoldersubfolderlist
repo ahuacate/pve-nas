@@ -1,0 +1,62 @@
+# Insert your base sub folders and group acl here!
+# Note the GUID=Group ID
+# 65605=medialab
+# 65606=homelab
+# 65607=privatelab
+# 65608=chrootjail
+
+# Video Folders (Main)
+${DIR_SCHEMA}/video/cctv 65606 0750 65605:rx 65607:rwx 65606:rwx 65608:000
+${DIR_SCHEMA}/video/documentary 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+${DIR_SCHEMA}/video/homevideo 65605 1750 65605:rwx 65607:rwx 65606:000 65608:rwx
+${DIR_SCHEMA}/video/movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+${DIR_SCHEMA}/video/musicvideo 65605 0750 65605:rwx 65606:000 65607:rwx 65608:rwx
+${DIR_SCHEMA}/video/pron 65605 0750 65605:rwx 65606:000 65607:rwx 65608:rwx
+${DIR_SCHEMA}/video/series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+${DIR_SCHEMA}/video/transcode 65605 0750 65605:rwx 65607:rwx 65606:000 65608:000
+
+# Video Folders (stream is for low bandwidth HEVC video)
+${DIR_SCHEMA}/video/stream root 0750 65605:rwx 65607:rwx 65608:rx
+${DIR_SCHEMA}/video/stream/documentary 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+${DIR_SCHEMA}/video/stream/homevideo 65605 1750 65605:rwx 65607:rwx 65606:000 65608:rwx
+${DIR_SCHEMA}/video/stream/movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+${DIR_SCHEMA}/video/stream/musicvideo 65605 0750 65605:rwx 65606:000 65607:rwx 65608:rwx
+${DIR_SCHEMA}/video/stream/pron 65605 0750 65605:rwx 65606:000 65607:rwx 65608:rwx
+${DIR_SCHEMA}/video/stream/series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+
+# Audio Book Folders
+${DIR_SCHEMA}/audio/audiobooks 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+${DIR_SCHEMA}/audio/podcasts 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+
+# Books Folders
+${DIR_SCHEMA}/books/comics 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+${DIR_SCHEMA}/books/ebooks 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+${DIR_SCHEMA}/books/magazines 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
+
+# Proxmox Folders
+${DIR_SCHEMA}/proxmox/backup root 1750 65605:rwx 65607:rwx 65606:rwx 65608:000
+
+# Public Folders
+${DIR_SCHEMA}/public/autoadd 65605 0750 65605:rwx 65607:rwx 65606:000 65608:000
+${DIR_SCHEMA}/public/autoadd/direct_import 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/direct_import/lazylibrarian 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent/documentary 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent/flexget-movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent/flexget-series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent/lazy 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent/movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent/music 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent/pron 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent/series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent/unsorted 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet/documentary 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet/flexget-movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet/flexget-series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet/lazy 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet/movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet/music 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet/pron 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet/series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet/unsorted 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw

@@ -1,0 +1,22 @@
+# This file is for base folders ONLY. If you want to add sub folders (i.e /srv/$HOSTNAME/video/tv) then edit pve_nas_basefoldersubfolderlist file
+# Note the GUID=Group ID
+# 65605=medialab
+# 65606=homelab
+# 65607=privatelab
+# 65608=chrootjail
+# FOLDERNAME GROUP PERMISSIONS ACL
+audio root 0750 65605:rwx 65607:rwx 65608:rx
+backup root 1750 65605:rwx 65606:rwx 65607:rwx
+books root 0755 65605:rwx 65607:rwx 65608:rx
+cloudstorage root 1750 65606:rwx 65607:rwx
+docker root 0750 65605:rwx 65606:rwx 65607:rwx
+downloads root 0755 65605:rwx 65607:rwx
+git root 0750 65607:rwx
+homes root 0777
+music root 0755 65605:rwx 65607:rwx 65608:rx
+openvpn root 0750 65607:rwx
+photo root 0750 65605:rwx 65607:rwx 65608:rx
+proxmox root 0750 65607:rwx 65606:rwx
+public root 1777 65605:rwx 65606:rwx 65607:rwx 65608:rwx
+sshkey root 1750 65607:rwx
+video root 0750 65605:rwx 65607:rwx 65608:rx
