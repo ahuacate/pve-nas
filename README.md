@@ -2,25 +2,25 @@
 
 This guide is for building a Proxmox based NAS. 
 
-The User can choose between a TrueNAS or Ubuntu based NAS. Both are configured with the same folder shares, network permissions, ACLs, default users & groups (medialab, homelab and privatelab), samba, CIFS and NFS ready for our suite of PVE CTs (Sonarr, Radarr etc).
+You can choose between a TrueNAS or a Ubuntu-based NAS. Both systems have the same folder shares, network permissions, ACLs, default Users & Groups ( medialab, homelab and privatelab ), samba, networking (SMB/CIF and NFS), and are ready for our suite of PVE CTs (Sonarr, Radarr etc).
 
-Users with PVE hosts limited by RAM memory, less than 16GB, we recommended a Ubuntu NAS. Its resource light requiring only 256MB RAM, based on a PVE LXC container and fast. It a simple NAS and works.
+For PVE hosts limited by RAM, less than 16GB, we recommended the Ubuntu-based NAS. It requires only 512MB RAM on a PVE LXC container.
 
 NAS build options are:
 
 1)  **TrueNAS (HBA Adapter)** - PCIe SATA/NVMe HBA card pass-thru (UNDER DEVELOPMENT - NOT WORKING)
 
-The PVE host must be installed with a 'dedicated' PCIe SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i). All TrueNAS storage disks, including any ZFS Cache SSDs, must be connected to the HBA Adapter Card. You cannot co-mingle TrueNAS disks with the PVE hosts mainboard onboard SATA/NVMe devices. The ZFS storage pool backend and fronted is fully managed by TrueNAS. ZFS Raid levels are determined by the number of HBA connected TrueNAS disks installed. You also have the option of configuring ZFS cache using SSD drives inside TrueNAS. ZFS cache will provide High Speed disk I/O.
+Here a dedicated PCIe SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i) supports all NAS disks. All TrueNAS storage disks, including any ZFS Cache SSDs, must be connected to the HBA Adapter Card. You cannot co-mingle TrueNAS disks with the PVE hosts mainboard onboard SATA/NVMe devices. TrueNAS manages both backend and frontend.
 
 2)  **Ubuntu NAS (PVE SATA/NVMe)** - PVE ZFS pool backend, Ubuntu frontend
 
-The NAS ZFS storage pool backend is fully managed by Proxmox. ZFS Raid levels depends on the number of disks installed. You also have the option of configuring ZFS cache using SSD drives. ZFS cache will provide High Speed disk I/O.
+Proxmox manages the ZFS storage pool backend while Ubuntu does the frontend. ZFS Raid levels depend on the number of disks installed. You also have the option of configuring ZFS cache using SSD drives. ZFS cache will provide High-Speed disk I/O.
 
 3)  **Ubuntu NAS (USB disks)** - PVE USB disk backend, Ubuntu frontend
 
-A USB based NAS for basic NAS file storage using a single external disk only. This solution is for SFF computing hardware such as Intel NUCs. Your NAS ZFS storage pool backend is fully managed by the Proxmox host.
+Here the NAS stores all data on an external USB disk. This is for SFF computing hardware such as Intel NUCs. Your NAS ZFS storage pool backend is fully managed by the Proxmox host.
 
-As with all our guides a Easy Script automates the Users NAS installation and configuration. The Easy Script offers the installer options based on your available hardware.
+As with all our guides, our Easy Script automates the Users NAS installation and configuration. The Easy Script offers the installer options based on your available hardware.
 
 Upon completion your NAS storage will include a our custom set of users, groups and folders:
 
@@ -51,6 +51,7 @@ Upon completion your NAS storage will include a our custom set of users, groups 
 |                          | /srv/HOSTNAME/public       |                                                                                                                      |
 |                          | /srv/HOSTNAME/sshkey       |                                                                                                                      |
 |                          | /srv/HOSTNAME/video        |                                                                                                                      |
+|                          | /srv/HOSTNAME/transcode    | Optional: For high I/O use a dedicated SSD                                                                           |
 
 The above default Linux users and groups (media:medialab, home:homelab, private:privatelab) are special users with a UID and GUID ready for our containerized (CT) applications, such as Sonarr, Radarr and Jellyfin. These special users have restricted custom UID & GUID access rights to NAS files. Do not delete these users!
 
@@ -63,17 +64,17 @@ The above default Linux users and groups (media:medialab, home:homelab, private:
 
 **Mandatory Prerequisites**
 
-- [X] PVE host installed with a minimum of 1x spare empty disk. Backup any data before proceeding with our Easy Script.
+- [X] PVE host installed with a minimum of 1x spare empty disk. Backup all data before proceeding with our Easy Script.
 
 **Optional Prerequisites**
 
 - [ ] PVE Host SSD/NVMe Cache (Recommended)
 - [ ] PCIe SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i)
 
-Our Easy Scripts assumes your network is VLAN ready. If not simply decline the Easy Script prompt to accept our default settings (Proceed with our Easy Script defaults (recommended) [y/n]?). You can then set your own PVE container or VM variable options.
+Our Easy Scripts assumes your network is VLAN ready. If not, simply decline the Easy Script prompt to accept our default settings (Proceed with our Easy Script defaults (recommended) [y/n]?). You can then set your PVE container or VM variable options.
 
 <h4>PVE NAS Easy Script</h4>
-Easy Scripts are based on bash scripting. Simply `Cut & Paste` our Easy Script command into your terminal window, press `Enter` and follow the prompts and terminal instructions. But PLEASE first read our guide so you fully understand the input requirements.
+Easy Scripts are based on bash scripting. `Cut & Paste` our Easy Script command into your terminal window, press `Enter`, and follow the prompts and terminal instructions. But PLEASE first read our guide.
 
 **Installation**
 
@@ -116,6 +117,8 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master
 
 <!-- /TOC -->
 
+<hr>
+
 # 1. Preparing your PVE NAS Hardware
 Your PVE NAS host hardware determines your NAS frontend options.
   - TrueNAS requires a PCIe SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i).
@@ -125,27 +128,27 @@ Your PVE NAS host hardware determines your NAS frontend options.
 
 A ZFS backend depends heavily on RAM, so you need at least 16GB (Recommend 32GB). TrueNAS specifies a minimum of 8GB RAM.
 
-Our Ubuntu NAS CT requires only 256MB RAM because the ZFS backend is managed by the Proxmox host. In practice, use as much RAM you can get for your hardware/budget.
+Our Ubuntu NAS CT requires only 512MB RAM because the ZFS backend is managed by the Proxmox host. In practice, use as much RAM you can get for your hardware/budget.
 
 ## 1.2. ZFS SSD Cache
 
 ZFS allows for tiered caching of data through the use of memory caches. While ZFS cache is optional we recommend the use of ZFS cache.
 
-With a Ubuntu NAS cache partitions can be made using PVE host drives or better use a dedicated SSD/NVMe disks. ZFS cache will provide High Speed disk I/O:
+With a Ubuntu NAS, cache partitions can be made using PVE host drives or better use dedicated SSD/NVMe disks. ZFS cache will provide High-Speed disk I/O:
 
 - ZFS Intent Log, or ZIL, to buffer WRITE operations.
-- ARC and L2ARC which are meant for READ operations.
+- ARC and L2ARC are meant for READ operations.
 
 ### 1.2.1. TrueNAS NAS
 For optimum performance install a dedicated PCIe NVMe HBA Adapter Card dedicated for ZFS Cache.
 
 ### 1.2.2. Ubuntu NAS
 
-Create a SSD/NVMe root drive cache partition or install a dedicated SSD/NVMe disk for ZFS Cache.
+Create an SSD/NVMe root drive cache partition or install a dedicated SSD/NVMe disk for ZFS Cache.
 
 #### 1.2.2.1. Partition ZFS Cache Setup -  PVE OS SSD/NVMe 
 
-This is the most cost effective method of deploying ZFS cache. Instructions are in our [PVE Host Setup](https://github.com/ahuacate/pve-host-setup#121-primary-host---partition-pve-os-ssds-for-zfs-cache---zfs-file-server) guide.
+This is the most cost-effective method of deploying ZFS cache. Instructions are in our [PVE Host Setup](https://github.com/ahuacate/pve-host-setup#121-primary-host---partition-pve-os-ssds-for-zfs-cache---zfs-file-server) guide.
 
 #### 1.2.2.2. Dedicated ZFS Cache Setup - SSD/NVMe
 
@@ -153,9 +156,9 @@ A dedicated ZFS cache SSD setup is the more costly method with no net performanc
 
 ## 1.3. NAS ZFS Storage Disks
 
-Both TrueNAS and Ubuntu NAS grant the User the option set different ZFS Raid levels.
+Both TrueNAS and Ubuntu NAS grant the User the option to set different ZFS Raid levels.
 
-We recommend you install a minimum of 3x NAS certified rotational hard disks in your host. When installing the disks make a note of logical SATA port IDs ( i.e sdc, sdd, sde ) you are connecting each hard disk to. This will help you identify which disks to format and add to your new ZFS storage pool.
+We recommend you install a minimum of 3x NAS certified rotational hard disks in your host. When installing the disks make a note of the logical SATA port IDs ( i.e sdc, sdd, sde ) you are connecting to. This helps you identify which disks to format and add to your new ZFS storage pool.
 
 Our Ubuntu NAS Easy Script has the options to use the following ZFS Raid builds:
 
@@ -168,33 +171,33 @@ Our Ubuntu NAS Easy Script has the options to use the following ZFS Raid builds:
 |RAIDZ2|A variation on RAID-5, double parity. Requires at least 4 disks.
 |RAIDZ3|A variation on RAID-5, triple parity. Requires at least 5 disks.
 
-Remember our Easy Script will destroy all existing data on these storage hard disks and its not recoverable!
+Remember, our Easy Script will destroy all existing data on these storage hard disks!
 
 # 2. Installer Prerequisite Credentials and inputs needed
 
-Our Easy Script requires the User to provide some inputs. The installer will be given default values to use or the option to input your own values.
+Our Easy Script requires the User to provide some inputs. The installer will be given default values to use or the option to input your values.
 
-With a TrueNAS build the installer must enter the details manually using the native TrueNAS webGUI. No Easy Script exists for configuring TrueNAS.
+With a TrueNAS build, the installer must enter the details manually using the native TrueNAS WebGUI. No Easy Script exists for configuring TrueNAS.
 
 We recommend you first prepare the following and have your credentials ready before running our NAS build scripts.
 
 ## 2.1. A System designated Administrator Email
 
-You need a designated administrator email address. All server alerts and server activity notifications will be sent to this email address. GMail works fine.
+You need a designated administrator email address. All server alerts and activity notifications will be sent to this email address. Gmail works fine.
 
 ## 2.2. SSMTP Server Credentials
 
-Our Ubuntu NAS Easy Script will give you the the option to install a SSMTP Email server (Recommended). SSMTP is Mail Transfer Agent (MTA) used to send email alerts about your machine like details about new user accounts, unwarranted login attempts and system critical alerts to the systems designated administrator.
+Our Ubuntu NAS Easy Script will give you the option to install an SSMTP Email server (Recommended). SSMTP is Mail Transfer Agent (MTA) used to send email alerts about your machines like details about new user accounts, unwarranted login attempts, and system critical alerts to the system's designated administrator.
 
 Having a working SMTP server makes life much easier. For example, you can receive all new User Account SSH keys and login credentials via email.
 
-You will be asked for the credentials of a SMTP Server. You can use GMail, GoDaddy, AWS or any SMTP server credentials (i.e address, port, username and password, encryption type etc.
+You will be asked for the credentials of an SMTP Server. You can use GMail, GoDaddy, AWS or any SMTP server credentials (i.e address, port, username and password, encryption type etc.
 
-But we recommend you create a account at [Mailgun](https://mailgun.com) to relay your NAS system emails to your designated administrator. With [Mailgun](https://mailgun.com) you are not potentially exposing your private email server credentials held within a text file on your NAS. This is a added layer of security.
+But we recommend you create an account at [Mailgun](https://mailgun.com) to relay your NAS system emails to your designated administrator. With [Mailgun](https://mailgun.com) you are not potentially exposing your private email server credentials held within a text file on your NAS. This is an added layer of security.
 
 ## 2.3. NAS Hostname
 
-The default hostname is `nas-01`. With our naming convention any secondary NAS appliance should have a hostname like `nas-02`, `nas-03` and so on. You may change the hostname to whatever you like. But for networking, integration with our Easy Scripts, hostname resolving, we recommend you use the default hostname naming convention ( `nas-01` ).
+The default hostname is `nas-01`. Our naming convention applies a secondary NAS appliance to be named `nas-02`, `nas-03` and so on. You may change the hostname to whatever you like. But for networking, integration with our Easy Scripts, hostname resolving, we recommend you use the default hostname naming convention ( `nas-01` ).
 
 ## 2.4. NAS IPv4 Address
 
@@ -202,7 +205,7 @@ By default `nas-01` is `192.168.1.10/24`. You may change to whatever IPv4 addres
 
 ## 2.5. Network VLAN Aware
 
-You must answer a Easy Script prompt asking if your network is VLAN aware. The script will resolve your NAS VLAN ID automatically.
+You must answer an Easy Script prompt asking if your network is VLAN aware. The script will resolve your NAS VLAN ID automatically.
 
 ## 2.6. NAS Gateway IPv4 Address
 
@@ -214,21 +217,21 @@ The default root password is 'ahuacate'. You can always change it.
 
 ## 2.8. USB Passthrough to CT
 
-There can be good reasons to access USB disk ware directly from your NAS CT. To make a physically connected USB device accessible inside a CT, for example NAS-01, the CT configuration file requires modification.
+There can be good reasons to access USB disk ware directly from your NAS CT. To make a physically connected USB device accessible inside a CT, for example, NAS-01, the CT configuration file requires modification.
 
-During the installation the Easy Script will display all available USB devices on the host computer. But you need to identify which USB host device ID to passthrough to the NAS CT. The simplest way is to plugin a physical USB memory stick, for example a SanDisk Cruzer Blade, into your preferred USB port on the host machine. Then to physically identify the USB host device ID (the USB port) to passthrough to PVE NAS CT it will be displayed on your terminal when running our Easy Script at the required USB passthrough stage as for example:
+During the installation, the Easy Script will display all available USB devices on the host computer. But you need to identify which USB host device ID to pass through to the NAS CT. The simplest way is to plug in a physical USB memory stick, for example, a SanDisk Cruzer Blade, into your preferred USB port on the host machine. Then to physically identify the USB host device ID (the USB port) to passthrough to PVE NAS CT it will be displayed on your terminal when running our Easy Script at the required USB passthrough stage as shown:
 
 ```
 5) Bus 002 Device 004: ID 0781:5567 SanDisk Corp. Cruzer Blade
 ```
 
-In the above example, you will select number **5** to passthrough. Then ONLY your PVE host hardware USB port where the SanDisk Blade drive was inserted is readable by you in the future.
+In the above example, you will select the number **5** to passthrough. Then ONLY your PVE host hardware USB port where the SanDisk Blade drive was inserted is readable by you in the future.
 
 So have a spare USB drive ready and available.
 
 # 3. Ubuntu NAS
 
-There are 'Easy Scripts' for Ubuntu NAS administration tasks for creating new user accounts, installing SMTP servers and more.
+'Easy Scripts' are available for administrative tasks. (i.e for creating new user accounts, installing SMTP servers, and more.)
 
 Run the following Easy Script and select the task you want to perform.
 
@@ -254,17 +257,17 @@ Power Users are trusted persons with privileged access to data and application r
 
 ### 3.1.2. Create Restricted and Jailed User Accounts (Standard Users)
 
-Every new user is restricted or jailed within their own home folder. In Linux this is called a chroot jail. But you can select a level of restriction which is applied to each newly created user. This technique can be quite useful if you want a particular user to be provided with a limited system environment, limited folder access and at the same time keep them separate from your main server system and other personal data. The chroot technique will automatically jail selected users belonging to the `chrootjail` user group upon ssh or ProFTPd SFTP login (standard FTP mode is disabled).
+Every new user is restricted or jailed within their own home folder. In Linux, this is called a chroot jail. But you can select a level of restriction which is applied to each newly created user. This technique can be quite useful if you want a particular user to be provided with a limited system environment, limited folder access and at the same time keep them separate from your main server system and other personal data. The chroot technique will automatically jail selected users belonging to the `chrootjail` user group upon ssh or ProFTPd SFTP login (standard FTP mode is disabled).
 
 An example of a jailed user is a person who has remote access to your PVE NAS but is restricted to your video library (TV, movies, documentary), public folders and their home folder for cloud storage only. Remote access to your PVE NAS is restricted to sftp, ssh and rsync using private SSH RSA encrypted keys. The user can backup their mobile, tablet, notebook or any device.
 
-When creating a new user you are given the choice to select a Level of `chrootjail` group permissions and access rights per user. We have pre-configured 3 Levels to choose from with varying degree of file access for different types of users.
+When creating a new user you are given the choice to select a Level of `chrootjail` group permissions and access rights per user. We have pre-configured 3 Levels to choose from with varying degrees of file access for different types of users.
 
 **Level 1**  -  This user is restricted to their private home folder for data storage and the NAS public folder only. This is ideal for persons whom you DO NOT want to share any media data with. Typical users maybe: persons wanting Cloud storage and nothing more.
 
 **Level 2**  -  This user is restricted to their private home folder for data storage, limited access to the NAS public folder and media library (i.e Restricted to movies, tv, documentary, homevideo folders only). The user is also setup with a downloads folder and special folders within their chrootjail home folder for sharing photos and homevideos with other users or a media server like Emby or Jellyfin. Typical users maybe: family, close friends and children because of limited media access.
 
-**Level 3**  -  This user is restricted to their private home folder for data storage, limited access to the NAS public, audio, books folders and media library (i.e This user level is NOT restricted so they can view ALL media content). The user is also setup with a downloads folder and special folders within their chrootjail home folder for sharing photos and homevideos with other users or a media server like Emby or Jellyfin. Typical users maybe: Power users and adults with full media library access.
+**Level 3**  -  This user is restricted to their private home folder for data storage, limited access to the NAS public, audio, books folders, and media library (i.e This user level is NOT restricted so they can view ALL media content). The user is also set up with a downloads folder and special folders within their chrootjail home folder for sharing photos and home videos with other users or a media server like Emby or Jellyfin. Typical users maybe: Power users and adults with full media library access.
 
 The options are options are:
 
