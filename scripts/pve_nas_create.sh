@@ -59,7 +59,7 @@ PVE_HOST_NAME=$(hostname)
 SSH_ENABLE=0
 
 # Developer enable git mounts inside CT (0 is enabled, 1 is disabled)
-DEV_GIT_MOUNT_ENABLE=0
+DEV_GIT_MOUNT_ENABLE=1
 
 #---- Other Variables --------------------------------------------------------------
 
