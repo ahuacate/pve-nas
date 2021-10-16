@@ -25,8 +25,13 @@ else
   exit 0
 fi
 
-# Set Package Installer Temp Folder
-cd /tmp
+# Installer cleanup
+function installer_cleanup () {
+rm -R ${REPO_TEMP}/common &> /dev/null
+rm -R ${REPO_TEMP}/${GIT_REPO} &> /dev/null
+rm ${REPO_TEMP}/common.tar.gz &> /dev/null
+rm ${REPO_TEMP}/${GIT_REPO}.tar.gz &> /dev/null
+}
 
 
 #---- Static Variables -------------------------------------------------------------
@@ -44,6 +49,10 @@ GIT_COMMON='0'
 # Installer App script
 GIT_APP_SCRIPT='pve_nas_create.sh'
 
+# Set Package Installer Temp Folder
+REPO_TEMP='/tmp'
+cd ${REPO_TEMP}
+
 #---- Other Variables --------------------------------------------------------------
 #---- Other Files ------------------------------------------------------------------
 
@@ -59,4 +68,9 @@ fi
 #---- Body -------------------------------------------------------------------------
 
 #---- Run Installer
-/tmp/${GIT_REPO}/scripts/${GIT_APP_SCRIPT}
+${REPO_TEMP}/${GIT_REPO}/scripts/${GIT_APP_SCRIPT}
+
+#---- Finish Line ------------------------------------------------------------------
+
+#--- Cleanup
+installer_cleanup

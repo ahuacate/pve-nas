@@ -35,6 +35,14 @@ else
     fi
 fi
 
+# Installer cleanup
+function installer_cleanup () {
+rm -R ${REPO_TEMP}/common &> /dev/null
+rm -R ${REPO_TEMP}/${GIT_REPO} &> /dev/null
+rm ${REPO_TEMP}/common.tar.gz &> /dev/null
+rm ${REPO_TEMP}/${GIT_REPO}.tar.gz &> /dev/null
+}
+
 
 #---- Static Variables -------------------------------------------------------------
 
@@ -48,6 +56,10 @@ GIT_REPO='pve-nas'
 GIT_BRANCH='master'
 # Git common
 GIT_COMMON='0'
+
+# Set Package Installer Temp Folder
+REPO_TEMP='/tmp'
+cd ${REPO_TEMP}
 
 #---- Other Variables --------------------------------------------------------------
 
@@ -74,12 +86,19 @@ source /tmp/common/pve/source/pvesource_bash_defaults.sh
 section "Select and Connect with your NAS"
 msg "User must identify and select a Ubuntu NAS from the menu:"
 unset vmid_LIST
-vmid_LIST+=( $(pct list | sed 's/[ ]\+/:/g' | sed 's/:$//' | awk -F':' 'BEGIN { OFS=FS } { if(NR > 1) print $3, $1 }') )
+vmid_LIST+=( $(pct list | sed 's/[ ]\+/:/g' | sed 's/:$//' | awk -F':' 'BEGIN { OFS=FS } { if(NR > 1) print $3, $1 }' | sed -e '$anone:none') )
 OPTIONS_VALUES_INPUT=$(printf '%s\n' "${vmid_LIST[@]}" | awk -F':' '{ print $2}')
-OPTIONS_LABELS_INPUT=$(printf '%s\n' "${vmid_LIST[@]}" | awk -F':' '{ print "NAME: "$1, "| VMID: "$2 }')
+OPTIONS_LABELS_INPUT=$(printf '%s\n' "${vmid_LIST[@]}" | awk -F':' '{if ($1 != "none" && $2 != "none") print "NAME: "$1, "| VMID: "$2; else print "None. Exit installation."; }')
 makeselect_input1 "$OPTIONS_VALUES_INPUT" "$OPTIONS_LABELS_INPUT"
 singleselect SELECTED "$OPTIONS_STRING"
 CTID=${RESULTS}
+# If 'none' clean and exit
+if [ ${CTID} = "none" ]; then
+  installer_cleanup
+  trap cleanup EXIT
+  exit 0
+fi
+
 
 # Check NAS run status
 pct_start_waitloop
@@ -143,11 +162,7 @@ section "Completion Status."
 msg "Success. Task complete."
 echo
 
-# Cleanup
-pct exec $CTID -- bash -c "rm -R /tmp/common &> /dev/null; rm -R /tmp/pve-nas &> /dev/null; rm /tmp/common.tar.gz &> /dev/null; rm /tmp/pve-nas.tar.gz &> /dev/null"
-rm -R /tmp/common &> /dev/null
-rm -R /tmp/pve-nas &> /dev/null
-rm /tmp/common.tar.gz &> /dev/null
-rm /tmp/pve-nas.tar.gz &> /dev/null
-
+#---- Cleanup
+pct exec $CTID -- bash -c "rm -R /tmp/common &> /dev/null; rm -R /tmp/${GIT_REPO} &> /dev/null; rm /tmp/common.tar.gz &> /dev/null; rm /tmp/${GIT_REPO}.tar.gz &> /dev/null"
+installer_cleanup
 trap cleanup EXIT
