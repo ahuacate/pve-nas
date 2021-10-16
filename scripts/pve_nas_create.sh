@@ -65,7 +65,7 @@ DEV_GIT_MOUNT_ENABLE=1
 
 #---- CT Ubuntu NAS
 # Container Hostname
-CT_HOSTNAME_VAR='nas-04'
+CT_HOSTNAME_VAR='nas-01'
 # Container IP Address (192.168.1.10)
 CT_IP_VAR='192.168.1.10'
 # CT IP Subnet
