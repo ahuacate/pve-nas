@@ -13,7 +13,7 @@ ${DIR_SCHEMA}/video/movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
 ${DIR_SCHEMA}/video/musicvideo 65605 0750 65605:rwx 65606:000 65607:rwx 65608:rwx
 ${DIR_SCHEMA}/video/pron 65605 0750 65605:rwx 65606:000 65607:rwx 65608:rwx
 ${DIR_SCHEMA}/video/series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
-${DIR_SCHEMA}/video/transcode 65605 0750 65605:rwx 65607:rwx 65606:000 65608:000
+${DIR_SCHEMA}/video/transcode root 0750 65605:rwx 65607:rwx 65606:000 65608:000
 
 # Video Folders (stream is for low bandwidth HEVC video)
 ${DIR_SCHEMA}/video/stream root 0750 65605:rwx 65607:rwx 65608:rx
