@@ -96,11 +96,13 @@ function storage_list () {
   done < <( fdisk -l 2>/dev/null | grep -E '(BIOS boot|EFI System|Linux swap|Linux LVM)' | awk '{ print $1 }' )
   # PVE All Disk array
   unset allTMP
+  declare -a allTMP
   while read -r line; do
     dev=$(echo $line | awk -F':' '{ print $1 }')
     IFS=$'\n' read -r -d '' -a allTMPVAR < <( lsblk -nbrd -o PATH,KNAME,PKNAME,FSTYPE,TRAN,MODEL,SERIAL,SIZE,TYPE,ROTA,UUID,RM,LABEL $line | sed 's/ /:/g' | awk -F':' 'BEGIN {OFS = FS} { $8=sprintf("%.0f",$8/(1024^3))"G" } {print $0}' | sed 's/$/:/' | sed 's/$/:0/' | awk -F':' -v var1="$(if [ "$(lsblk -nbr -o FSTYPE "$dev")" = "zfs_member" ] || [ "$(blkid -o value -s TYPE "$dev")" = "zfs_member" ]; then echo "zfs_member"; else echo ""; fi)" -v var2="$(if [ "$(lsblk -nbr -o FSTYPE "$dev")" = "zfs_member" ] || [ "$(blkid -o value -s TYPE "$dev")" = "zfs_member" ]; then echo "$(blkid -o value -s LABEL "$dev")"; else echo ""; fi)" 'BEGIN {OFS = FS}{if ($4 == "") {$4 = var1;}}{if ($14 == "") {$14 = var2;} {print $0};}' && printf '\0' )
     allTMP+=( $(echo "${allTMPVAR[@]}") )
   done < <( lsblk -nbr -o PATH 2>/dev/null )
+  # Check allTMP against system/root
   unset allSTORAGE
   declare -a allSTORAGE
   for a in "${allTMP[@]}"; do
@@ -128,7 +130,8 @@ function storage_list () {
         break
       fi
     done
-    $in || allSTORAGE+=( $(echo "$a" | awk -F':' -v j="$(if [ "$(echo "$a" | awk -F':' '{ if($3 != "") { print "0" } }')" = 0 ]; then printf '%s\n' "${allTMP[@]}" | grep -w "/dev/"$(echo "$a" | awk -F':' '{ print $3 }')"" | awk -F':' '{ print $5 }'; else echo $3; fi)" 'BEGIN {OFS = FS} {if ($3 != "") {$5 = j;} {print $0};}' | awk -F':' -v k="$(if [ "$(echo "$a" | awk -F':' '{ if($3 == "") { print "0" } }')" = 0 ]; then printf '%s\n' "${allTMP[@]}" | grep -w "$(echo "$a" | awk -F':' '{ print $1 }')[0-9]\|$(echo "$a" | awk -F':' '{ print $1 }')p[0-9]" | wc -l; else echo 0; fi)" 'BEGIN {OFS = FS}{if ($3 == "") {$3 = k;} {print $0};}' | awk -F':' -v i="$(if [ "$(echo "$a" | awk -F':' '{ if ($1 ~ /^\/dev\/sd[a-z]$/ || $1 ~ /^\/dev\/nvme[0-9]n[0-9]$/) { print "0" } }')" = 0 ]; then printf '%s\n' "${allTMP[@]}" | grep -w "$(echo "$a" | awk -F':' '{ print $1 }')[0-9]\|$(echo "$a" | awk -F':' '{ print $1 }')p[0-9]" | awk -F':' '{ if ($14 != "") { print $0 }}' | wc -l; else echo 0; fi)" 'BEGIN {OFS = FS}{if ($14 == "") {$14 = i;} {print $0};}') )
+    # 1=PATH:2=KNAME:3=PKNAME:4=FSTYPE:5=TRAN:6=MODEL:7=SERIAL:8=SIZE:9=TYPE:10=ROTA:11=UUID:12=RM:13=LABEL:14=ZPOOLNAME:15=SYSTEM
+    $in || allSTORAGE+=( $(echo "$a" | awk -F':' -v j="$(if [ "$(echo "$a" | awk -F':' '{ if($3 != "") { print "0" } }')" = 0 ]; then printf '%s\n' "${allTMP[@]}" | grep -w "/dev/"$(echo "$a" | awk -F':' '{ print $3 }')"" | awk -F':' '{ print $5 }'; else echo $3; fi)" 'BEGIN {OFS = FS} {if ($3 != "") {$5 = j;} {print $0};}' | awk -F':' -v k="$(if [ "$(echo "$a" | awk -F':' '{ if($3 == "") { print "0" } }')" = 0 ]; then printf '%s\n' "${allTMP[@]}" | grep -w "$(echo "$a" | awk -F':' '{ print $1 }')[0-9]\|$(echo "$a" | awk -F':' '{ print $1 }')p[0-9]" | wc -l; else echo 0; fi)" 'BEGIN {OFS = FS}{if ($3 == "") {$3 = k;} {print $0};}' | awk -F':' -v i="$(if [ "$(echo "$a" | awk -F':' '{ if ($1 ~ /^\/dev\/sd[a-z]$/ || $1 ~ /^\/dev\/nvme[0-9]n[0-9]$/) { print "0" } }')" = 0 ]; then printf '%s\n' "${allTMP[@]}" | grep -w "$(echo "$a" | awk -F':' '{ print $1 }')[0-9]\|$(echo "$a" | awk -F':' '{ print $1 }')p[0-9]" | awk -F':' '{ if ($14 != "") { print $0 }}' | wc -l; else echo 0; fi)" 'BEGIN {OFS = FS}{if ($14 == "") {$14 = i;} {print $0};}') ) && in=false
   done
   # output
   unset storLIST
@@ -153,7 +156,7 @@ STOR_MIN=10
 storage_list
 
 #---- Creating the ZPOOL Tank
-section "Setup a USB ZFS Storage Pool."
+section "Setup a USB ZFS Storage Pool"
 # 1=PATH:2=KNAME:3=PKNAME:4=FSTYPE:5=TRAN:6=MODEL:7=SERIAL:8=SIZE:9=TYPE:10=ROTA:11=UUID:12=RM:13=LABEL:14=ZPOOLNAME:15=SYSTEM
 
 # Set ZFS Storage Pool name
@@ -287,7 +290,7 @@ while true; do
 done
 
 
-#---- Select a USB disk or drive partition
+# #---- Select a USB disk or drive partition
 if [ $ZPOOL_TYPE = 0 ] || [ $ZPOOL_TYPE = 1 ]; then
   # 1=PATH:2=KNAME:3=PKNAME:4=FSTYPE:5=TRAN:6=MODEL:7=SERIAL:8=SIZE:9=TYPE:10=ROTA:11=UUID:12=RM:13=LABEL:14=ZPOOLNAME:15=SYSTEM
   section "Select a USB disk or drive partition."
@@ -303,8 +306,9 @@ if [ $ZPOOL_TYPE = 0 ] || [ $ZPOOL_TYPE = 1 ]; then
   ZFSPOOL_TANK_CREATE=0
 fi
 
+
 # Erase / Wipe ZFS pool disks
-if [ $ZPOOL_TYPE = 0 ] || [ $ZPOOL_TYPE = 1 ] && [ $ZFSPOOL_TANK_CREATE = 0 ]; then
+if [ ${ZPOOL_TYPE} = 0 ] || [ ${ZPOOL_TYPE} = 1 ] && [ ${ZFSPOOL_TANK_CREATE} = 0 ]; then
   msg "Zapping, Erasing and Wiping selected storage device..."
   while read SELECTED_DEVICE; do
     sgdisk --zap $SELECTED_DEVICE >/dev/null 2>&1
@@ -316,7 +320,7 @@ if [ $ZPOOL_TYPE = 0 ] || [ $ZPOOL_TYPE = 1 ] && [ $ZFSPOOL_TANK_CREATE = 0 ]; t
 fi
 
 # Create ZFS Pool
-if [ $ZPOOL_TYPE = 0 ] || [ $ZPOOL_TYPE = 1 ] && [ $ZFSPOOL_TANK_CREATE = 0 ]; then
+if [ ${ZPOOL_TYPE} = 0 ] || [ ${ZPOOL_TYPE} = 1 ] && [ ${ZFSPOOL_TANK_CREATE} = 0 ]; then
   msg "Creating ZFS pool '$POOL'..."
   zpool create -f -o ashift=12 $POOL $(printf '%s\n' "${RESULTS[@]}" | awk -F':' '{ print $1 }')
   sleep 1
@@ -328,7 +332,7 @@ if [ $ZPOOL_TYPE = 0 ] || [ $ZPOOL_TYPE = 1 ] && [ $ZFSPOOL_TANK_CREATE = 0 ]; t
 fi
 
 # Reconnect to ZFS Pool
-if [ $ZPOOL_TYPE = 2 ]; then
+if [ ${ZPOOL_TYPE} = 2 ]; then
   msg "Reconnecting to existing ZFS '$POOL'..."
   zpool import -d /dev/disk/by-id $POOL
   storage_list # Update storage list array
