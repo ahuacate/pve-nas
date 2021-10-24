@@ -60,3 +60,9 @@ ${DIR_SCHEMA}/public/autoadd/usenet/music 65605 0750 65605:rwx 65607:rwx 65606:0
 ${DIR_SCHEMA}/public/autoadd/usenet/pron 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 ${DIR_SCHEMA}/public/autoadd/usenet/series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 ${DIR_SCHEMA}/public/autoadd/usenet/unsorted 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+
+# Vidcoderr Folders
+${DIR_SCHEMA}/public/autoadd/vidcoderr 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/vidcoderr/in_homevideo 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/vidcoderr/in_unsorted 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/vidcoderr/out_unsorted 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
