@@ -128,6 +128,7 @@ cat pve_nas_basefolderlist | sed '/^#/d' | sed '/^$/d' >/dev/null > pve_nas_base
 while read -r dir group permission acl_01 acl_02 acl_03 acl_04 acl_05; do
   if [ -d "${DIR_SCHEMA}/${dir}" ]; then
     info "Pre-existing folder: ${UNDERLINE}"${DIR_SCHEMA}/${dir}"${NC}\n  Setting ${group} group permissions for existing folder."
+    find "${DIR_SCHEMA}/" -name .foo_protect -exec chattr -i {} \;
     chgrp -R "${group}" "${DIR_SCHEMA}/${dir}" >/dev/null
     chmod -R "${permission}" "${DIR_SCHEMA}/${dir}" >/dev/null
     if [ ! -z ${acl_01} ]; then
@@ -148,6 +149,7 @@ while read -r dir group permission acl_01 acl_02 acl_03 acl_04 acl_05; do
     echo
   else
     info "New base folder created:\n  ${WHITE}"${DIR_SCHEMA}/${dir}"${NC}"
+    find "${DIR_SCHEMA}/" -name .foo_protect -exec chattr -i {} \;
     mkdir -p "${DIR_SCHEMA}/${dir}" >/dev/null
     chgrp -R "${group}" "${DIR_SCHEMA}/${dir}" >/dev/null
     chmod -R "${permission}" "${DIR_SCHEMA}/${dir}" >/dev/null
@@ -183,7 +185,8 @@ if [ -f pve_nas_basefoldersubfolderlist ]; then
   echo -e "$(eval "echo -e \"`<pve_nas_basefoldersubfolderlist`\"")" | sed '/^#/d' | sed '/^$/d' >/dev/null > pve_nas_basefoldersubfolderlist_input
   while read -r dir group permission acl_01 acl_02 acl_03 acl_04 acl_05; do
     if [ -d "${dir}" ]; then
-      info "${dir} exists, setting ${group} group permissions for this folder."
+      info "${dir} exists.\n  Setting ${group} group permissions for this folder."
+      find ${dir} -name .foo_protect -exec chattr -i {} \;
       chgrp -R "${group}" "${dir}" >/dev/null
       chmod -R "${permission}" "${dir}" >/dev/null
       if [ ! -z ${acl_01} ]; then
