@@ -74,13 +74,15 @@ if [ -f /mnt/pve/nas-*[0-9]-git/${GIT_USER}/developer_settings.git ] && [ -f /mn
   source /mnt/pve/nas-*[0-9]-git/${GIT_USER}/common/bash/source/pve_repo_loader.sh
 else
   # Download Github loader
-  bash -c "$(wget -qLO - https://raw.githubusercontent.com/${GIT_USER}/common/master/bash/source/pve_repo_loader.sh)"
+  wget -qL - https://raw.githubusercontent.com/${GIT_USER}/common/master/bash/source/pve_repo_loader.sh -O ${REPO_TEMP}/pve_repo_loader.sh
+  chmod +x ${REPO_TEMP}/pve_repo_loader.sh
+  source ${REPO_TEMP}/pve_repo_loader.sh
 fi
 
 #---- Body -------------------------------------------------------------------------
 
 #---- Run Bash Header
-source /tmp/common/pve/source/pvesource_bash_defaults.sh
+source ${REPO_TEMP}/common/pve/source/pvesource_bash_defaults.sh
 
 #---- Select NAS CTID
 section "Select and Connect with your NAS"
@@ -105,12 +107,12 @@ pct_start_waitloop
 
 # Pushing PVE common setup scripts to NAS CT
 msg "Pushing common scripts to NAS CT..."
-pct push $CTID /tmp/common.tar.gz /tmp/common.tar.gz
+pct push $CTID ${REPO_TEMP}/common.tar.gz /tmp/common.tar.gz
 pct exec $CTID -- tar -zxf /tmp/common.tar.gz -C /tmp
 
 # Pushing PVE-nas setup scripts to NAS CT
 msg "Pushing NAS configuration scripts to NAS CT..."
-pct push $CTID /tmp/${GIT_REPO}.tar.gz /tmp/${GIT_REPO}.tar.gz
+pct push $CTID ${REPO_TEMP}/${GIT_REPO}.tar.gz /tmp/${GIT_REPO}.tar.gz
 pct exec $CTID -- tar -zxf /tmp/${GIT_REPO}.tar.gz -C /tmp
 echo
 

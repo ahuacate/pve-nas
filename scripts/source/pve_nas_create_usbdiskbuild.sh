@@ -63,6 +63,26 @@ function install_usbautomount () {
 }
 
 # Storage Array List
+function reset_usb() {
+  msg "Resetting USB devices..."
+  # USB 3.1 Only
+  for port in $(lspci | grep xHCI | cut -d' ' -f1); do
+    echo -n "0000:${port}"| tee /sys/bus/pci/drivers/xhci_hcd/unbind > /dev/null
+    sleep 5
+    echo -n "0000:${port}" | tee /sys/bus/pci/drivers/xhci_hcd/bind > /dev/null
+    sleep 5
+  done
+  # All USB
+  for port in $(lspci | grep USB | cut -d' ' -f1); do
+    echo -n "0000:${port}"| tee /sys/bus/pci/drivers/xhci_hcd/unbind > /dev/null
+    sleep 5
+    echo -n "0000:${port}" | tee /sys/bus/pci/drivers/xhci_hcd/bind > /dev/null
+    sleep 5
+  done
+  echo
+}
+
+# Storage Array List
 function storage_list() {
   # 1=PATH:2=KNAME:3=PKNAME (or part cnt.):4=FSTYPE:5=TRAN:6=MODEL:7=SERIAL:8=SIZE:9=TYPE:10=ROTA:11=UUID:12=RM:13=LABEL:14=ZPOOLNAME:15=SYSTEM
   # PVE All Disk array
@@ -75,7 +95,12 @@ function storage_list() {
     #---- Set variables
     # Partition Cnt (Col 3)
     if ! [[ $(echo $line | awk -F':' '{ print $3 }') ]] && [[ "$(echo "$line" | awk -F':' '{ if ($1 ~ /^\/dev\/sd[a-z]$/ || $1 ~ /^\/dev\/nvme[0-9]n[0-9]$/) { print "0" } }')" ]]; then
-      var3=$(partx -g ${dev} | wc -l)
+      # var3=$(partx -g ${dev} | wc -l)
+      if [[ $(lsblk ${dev} | grep -q part) ]]; then
+        var3=$(lsblk ${dev} | grep part | wc -l)
+      else
+        var3='0'
+      fi
     else
       var3=$(echo $line | awk -F':' '{ print $3 }')
     fi
@@ -99,7 +124,7 @@ function storage_list() {
 
     # Zpool Name or Cnt (Col 14)
     if [[ "$(echo ${dev} | awk '{ if ($1 ~ /^\/dev\/sd[a-z]$/ || $1 ~ /^\/dev\/nvme[0-9]n[0-9]$/) { print "0" } }')" ]]; then
-      var14=$(lsblk -nbr -o PATH,KNAME,PKNAME,FSTYPE,TRAN,MODEL,SERIAL,SIZE,TYPE,ROTA,UUID,RM,LABEL | sed 's/ /:/g' | sed 's/$/:/' | sed 's/$/:0/' 2>/dev/null  | grep -w "^$(echo ${dev} | awk '{ print $1 }')[0-9]\|$(echo ${dev} | awk -F':' '{ print $1 }')p[0-9]" | awk -F':' '{ if ($4 == 'zfs_member') { print $0 }}' | wc -l)
+      var14=$(lsblk -nbr -o PATH,KNAME,PKNAME,FSTYPE,TRAN,MODEL,SERIAL,SIZE,TYPE,ROTA,UUID,RM,LABEL | sed 's/ /:/g' | sed 's/$/:/' | sed 's/$/:0/' 2>/dev/null | grep -w "^$(echo ${dev} | awk '{ print $1".*[0-9]*$" }')\|^$(echo ${dev} | awk '{ print $1".*p[0-9]*$" }')" | awk -F':' '{ if ($4 == 'zfs_member') { print $0 }}' | wc -l)
     elif [ "$(lsblk -nbr -o FSTYPE ${dev})" = "zfs_member" ] || [ "$(blkid -o value -s TYPE ${dev})" = "zfs_member" ]; then
       var14=$(blkid -o value -s LABEL ${dev})
     else
@@ -142,12 +167,21 @@ STOR_MIN=10
 #---- Prerequisites
 # Create storage list array
 storage_list
+echo hello2
 
 # Create a output file
 unset storLIST
 for i in "${allSTORAGE[@]}"; do
   storLIST+=( $(echo $i) )
 done
+
+# Check for USB disks
+if [ $(printf '%s\n' "${storLIST[@]}" | awk -F':' '{ if ($5 == "usb" && $15 == 0) { print $0 } }' | wc -l) = 0 ] && [ $(printf '%s\n' "${storLIST[@]}" | awk -F':' '{ if ($5 == "usb" && $15 == 0 && ($9 == "disk" || $9 == "part")) { print $0 } }' | wc -l) = 0 ]; then
+  warn "No available USB disk was discovered. Try reconnecting your USB disk and run this installation script again.\nExisting in 3 seconds..."
+  echo
+  sleep 3
+  exit 1
+fi
 
 #---- Creating the ZPOOL Tank
 section "Setup a USB ZFS Storage Pool"

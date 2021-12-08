@@ -235,7 +235,7 @@ select menu in "${options[@]}"; do
     "$TYPE03")
       USER_TYPE=3
       echo
-      msg "You have chosen not to proceed. Aborting. Bye..."
+      msg "You have chosen not to proceed. Moving on..."
       echo
       sleep 1
       break

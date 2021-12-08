@@ -16,9 +16,8 @@ ${DIR_SCHEMA}/video/series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
 ${DIR_SCHEMA}/video/transcode root 0750 65605:rwx 65607:rwx 65606:000 65608:000
 
 # Video Folders (stream is for low bandwidth HEVC video)
-${DIR_SCHEMA}/video/stream root 0750 65605:rwx 65607:rwx 65608:rx
+${DIR_SCHEMA}/video/stream root 0750 65605:r 65607:r 65608:r
 ${DIR_SCHEMA}/video/stream/documentary 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
-${DIR_SCHEMA}/video/stream/homevideo 65605 1750 65605:rwx 65607:rwx 65606:000 65608:rwx
 ${DIR_SCHEMA}/video/stream/movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
 ${DIR_SCHEMA}/video/stream/musicvideo 65605 0750 65605:rwx 65606:000 65607:rwx 65608:rwx
 ${DIR_SCHEMA}/video/stream/pron 65605 0750 65605:rwx 65606:000 65607:rwx 65608:rwx
@@ -37,10 +36,10 @@ ${DIR_SCHEMA}/books/magazines 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rx
 ${DIR_SCHEMA}/proxmox/backup root 1750 65605:rwx 65607:rwx 65606:rwx 65608:000
 
 # Public Folders
-${DIR_SCHEMA}/public/autoadd 65605 0750 65605:rwx 65607:rwx 65606:000 65608:000
+${DIR_SCHEMA}/public/autoadd 65605 0750 65605:r 65607:r 65606:000 65608:r
 ${DIR_SCHEMA}/public/autoadd/direct_import 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 ${DIR_SCHEMA}/public/autoadd/direct_import/lazylibrarian 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
-${DIR_SCHEMA}/public/autoadd/torrent 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/torrent 65605 0750 65605:r 65607:r 65606:000 65608:r
 ${DIR_SCHEMA}/public/autoadd/torrent/documentary 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 ${DIR_SCHEMA}/public/autoadd/torrent/flexget-movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 ${DIR_SCHEMA}/public/autoadd/torrent/flexget-series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
@@ -50,7 +49,7 @@ ${DIR_SCHEMA}/public/autoadd/torrent/music 65605 0750 65605:rwx 65607:rwx 65606:
 ${DIR_SCHEMA}/public/autoadd/torrent/pron 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 ${DIR_SCHEMA}/public/autoadd/torrent/series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 ${DIR_SCHEMA}/public/autoadd/torrent/unsorted 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
-${DIR_SCHEMA}/public/autoadd/usenet 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/usenet 65605 0750 65605:r 65607:r 65606:000 65608:r
 ${DIR_SCHEMA}/public/autoadd/usenet/documentary 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 ${DIR_SCHEMA}/public/autoadd/usenet/flexget-movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 ${DIR_SCHEMA}/public/autoadd/usenet/flexget-series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
@@ -62,7 +61,13 @@ ${DIR_SCHEMA}/public/autoadd/usenet/series 65605 0750 65605:rwx 65607:rwx 65606:
 ${DIR_SCHEMA}/public/autoadd/usenet/unsorted 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 
 # Vidcoderr Folders
-${DIR_SCHEMA}/public/autoadd/vidcoderr 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/vidcoderr 65605 0750 65605:r 65607:r 65606:000 65608:r
 ${DIR_SCHEMA}/public/autoadd/vidcoderr/in_homevideo 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
 ${DIR_SCHEMA}/public/autoadd/vidcoderr/in_unsorted 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
-${DIR_SCHEMA}/public/autoadd/vidcoderr/out_unsorted 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/vidcoderr/out_unsorted 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rwx
+${DIR_SCHEMA}/public/autoadd/vidcoderr/in_stream 65605 0750 65605:r 65607:r 65606:000 65608:r
+${DIR_SCHEMA}/public/autoadd/vidcoderr/in_stream/documentary 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/vidcoderr/in_stream/movies 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/vidcoderr/in_stream/musicvideo 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/vidcoderr/in_stream/pron 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
+${DIR_SCHEMA}/public/autoadd/vidcoderr/in_stream/series 65605 0750 65605:rwx 65607:rwx 65606:000 65608:rw
