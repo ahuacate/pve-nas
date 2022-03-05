@@ -87,7 +87,6 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master
         - [1.4.5. Network VLAN Aware](#145-network-vlan-aware)
         - [1.4.6. NAS Gateway IPv4 Address](#146-nas-gateway-ipv4-address)
         - [1.4.7. NAS Root Password](#147-nas-root-password)
-        - [1.4.8. USB Passthrough to CT](#148-usb-passthrough-to-ct)
 - [2. Ubuntu NAS Administration Toolbox](#2-ubuntu-nas-administration-toolbox)
     - [2.1. Create new User Accounts](#21-create-new-user-accounts)
         - [2.1.1. Create "Power User" Accounts](#211-create-power-user-accounts)
@@ -193,22 +192,6 @@ The script will attempt to find your Gateway IPv4 address. Confirm with `Enter` 
 ### 1.4.7. NAS Root Password
 
 The default root password is 'ahuacate'. You can always change it at a later stage.
-
-### 1.4.8. USB Passthrough to CT
-
-Personally why bother with USB passthrough when you can copy data to your NAS using SMB? So I do not recommend USB passthrough.
-
-Anyway, to make a physically connected USB device accessible inside a CT the CT configuration file requires modification.
-
-During the installation, the Easy Script will display all available USB devices on the host computer. But you need to identify which USB host device ID to pass through to the NAS CT. The simplest way is to plug in a physical USB memory stick, for example, a SanDisk Cruzer Blade, into your preferred USB port on the host machine. Then to physically identify the USB host device ID (the USB port) to passthrough to PVE NAS CT it will be displayed on your terminal when running our Easy Script at the required USB passthrough stage as shown:
-
-```
-5) Bus 002 Device 004: ID 0781:5567 SanDisk Corp. Cruzer Blade
-```
-
-In the above example, you will select the number **5** to passthrough. Then ONLY your PVE host hardware USB port where the SanDisk Blade drive was inserted is readable by you in the future.
-
-So have a spare USB drive ready and available.
 
 # 2. Ubuntu NAS Administration Toolbox
 

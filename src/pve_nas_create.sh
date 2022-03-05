@@ -63,7 +63,7 @@ SSH_PORT='22'
 
 #----[COMMON_GENERAL_OPTIONS]
 # Hostname
-HOSTNAME='nas-03'
+HOSTNAME='nas-01'
 # Description for the Container (one word only, no spaces). Shown in the web-interface CT’s summary. 
 DESCRIPTION=''
 # Virtual OS/processor architecture.
@@ -159,109 +159,6 @@ CT_TYPE='veth'
 CT_OSVERSION='21.04'
 # CTID numeric ID of the given container.
 CTID='112'
-
-# #---- CT Ubuntu NAS
-# # Container Hostname
-# HOSTNAME_VAR='nas-01'
-# # Container IP Address (192.168.1.10)
-# CT_IP_VAR='192.168.1.10'
-# # CT IP Subnet
-# CT_IP_SUBNET='24'
-# # Container Network Gateway
-# CT_GW_VAR='192.168.1.5'
-# # DNS Server
-# CT_DNS_SERVER_VAR='192.168.1.5'
-# # Container Number
-# CTID_VAR='110'
-# # Container VLAN
-# CT_TAG_VAR='0'
-# # Container Virtual Disk Size (GB)
-# CT_DISK_SIZE_VAR='5'
-# # Container allocated RAM
-# CT_RAM_VAR='512'
-# # Easy Script Section Header Body Text
-# SECTION_HEAD='PVE NAS'
-# #---- Do Not Edit
-# # Container Swap
-# CT_SWAP="$(( $CT_RAM_VAR / 2 ))"
-# # CT CPU Cores
-# CT_CPU_CORES="$CT_CPU_CORES_VAR"
-# # CT unprivileged status
-# CT_UNPRIVILEGED='0'
-# # Features ( 0 means none )
-# CT_FUSE='0'
-# CT_KEYCTL='0'
-# CT_MOUNT='nfs'
-# CT_NESTING='1'
-# # Container Root Password ( 0 means none )
-# CT_PASSWORD='ahuacate'
-# # Startup Order
-# CT_STARTUP='1'
-# # PVE Container OS
-# OSTYPE='ubuntu'
-# OSVERSION='21.04'
-
-# # CT SSH Port
-# SSH_PORT_VAR='22' # Best not use default port 22
-
-
-# #---- VM TrueNAS
-# # VM Hostname
-# VM_HOSTNAME=${HOSTNAME}
-# # VM Network Configuration
-# VM_NET_BRIDGE='vmbr0'
-# VM_NET_MODEL='virtio'
-# VM_NET_MAC_ADDRESS='auto' # Leave as auto unless input valid mac address
-# VM_NET_FIREWALL='1'
-# # VM IP Address (192.168.1.10)
-# VM_IP=${CT_IP}
-# # VM IP Subnet
-# VM_IP_SUBNET=${CT_IP_SUBNET}
-# # VM Network Gateway
-# VM_GW=${CT_GW}
-# # DNS Server
-# VM_DNS_SERVER=${CT_DNS_SERVER}
-# # VM VLAN
-# VM_TAG=${CT_TAG}
-# # VM ID Number
-# VMID=${CTID}
-# # VM Virtual Disk Size (GB)
-# VM_DISK_SIZE=${CT_DISK_SIZE}
-# # VM allocated RAM
-# VM_RAM='1024'
-# # VM balloon RAM
-# VM_RAM_BALLOON='512'
-# #---- Do Not Edit
-# # Guest OS
-# VM_OS_TYPE='126'
-# # VM CPU
-# VM_CPU_UNITS='1024' # Default '1024'
-# VM_CPU_SOCKETS='1' # Default '1'
-# VM_CPU_CORES='1' # Default '1'
-# VM_CPU_LIMIT='0' # Default '0'
-# VM_VCPU='1' # Default '1'
-# # Startup Order
-# VM_AUTOSTART='1'
-# VM_ONBOOT='1'
-# VM_STARTUP_ORDER='1'
-# VM_STARTUP_DELAY='30' # Delay in seconds
-# # Start VM after it was created successfully.
-# VM_START='0' # Default '0' (1 for start)
-# # VM SSH Port
-# SSH_PORT_VAR='22' # Best not use default port 22
-# # Latest TrueNAS ISO
-# for VM_ISO in $(curl -s https://download.freenas.org/latest/x64/ |
-#   grep href |
-#   sed 's/.*href="//' |
-#   sed 's/".*//' |
-#   grep '^[a-zA-Z].*' |
-#   grep -i 'TrueNAS.*\.iso$'); do
-#   SRC_ISO_URL="https://download.freenas.org/latest/x64/${VM_ISO}"
-# done
-# SRC_ISO_URL="https://download.freenas.org/latest/x64/${VM_ISO}"
-# # PVE VM OS
-# VM_OSVERSION="$(echo ${VM_ISO} | sed 's/^[^-]*-//g' | sed 's/\.[^.]*$//')"
-
 
 
 #---- Repo variables
@@ -396,9 +293,6 @@ elif [ ${TYPE} == TYPE02 ] || [ ${TYPE} == TYPE03 ]; then
     info "CT $CTID mount point created: ${YELLOW}/srv/${HOSTNAME}${NC}"
     echo
   fi
-
-  # #---- Option to create USB pass through
-  # source ${COMMON_PVE_SRC}/pvesource_ct_usbpassthru.sh
 
   #---- Configure New CT OS
   source ${COMMON_PVE_SRC}/pvesource_ct_ubuntubasics.sh
