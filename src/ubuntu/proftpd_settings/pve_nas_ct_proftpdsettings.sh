@@ -5,12 +5,12 @@
 # ----------------------------------------------------------------------------------
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-COMMON_PVE_SOURCE="${DIR}/../../../../../common/pve/source"
+COMMON_PVE_SRC="${DIR}/../../../common/pve/src"
 
 #---- Dependencies -----------------------------------------------------------------
 
 # Run Bash Header
-source ${COMMON_PVE_SOURCE}/pvesource_bash_defaults.sh
+source ${COMMON_PVE_SRC}/pvesource_bash_defaults.sh
 
 #---- Static Variables -------------------------------------------------------------
 #---- Other Variables --------------------------------------------------------------
@@ -18,7 +18,15 @@ source ${COMMON_PVE_SOURCE}/pvesource_bash_defaults.sh
 # Section Header Body Text
 SECTION_HEAD='PVE NAS'
 
+# Check if IP is static or DHCP
+if [[ $(ip r | head -n 1 | grep -n 'proto dhcp') ]]; then
+  DHCP=1
+else
+  DHCP=0
+fi
+
 #---- Other Files ------------------------------------------------------------------
+#---- Functions --------------------------------------------------------------------
 #---- Body -------------------------------------------------------------------------
 
 #---- Setting Folder Permissions
@@ -26,11 +34,12 @@ section "Setup ProFTPd SFTP service."
 
 # Check for ProFTPd installation
 msg "Checking for ProFTPd status..."
-if [ $(dpkg -s proftpd-core >/dev/null 2>&1; echo $?) = 0 ]; then
+if [ $(dpkg -s proftpd-core >/dev/null 2>&1; echo $?) == '0' ]; then
   info "ProFTPd status: ${GREEN}installed.${NC} ( $(proftpd --version) )"
   echo
 else
-  warn "ProFTPd is not installed. User intervention is required.\nExiting installation script..."
+  info "ProFTPd is not installed. Exiting ProFTP installation script..."
+  echo
   exit 0
 fi
 
@@ -46,7 +55,7 @@ if [ -f /etc/proftpd/conf.d/sftp.conf ] || [ -f /etc/proftpd/conf.d/global_defau
     --  /etc/proftpd/conf.d/global_desktopdir.conf
 
     The User also has the option to set the following:
-    -- SFTP WAN address ( i.e a HAProxy URL, DynDNS providor or static IP)
+    -- SFTP WAN address ( i.e a HAProxy URL, DynDNS provider or static IP)
     -- SFTP WAN port
     -- SFTP local port
 
@@ -84,7 +93,7 @@ Our ProFTPd settings are tailored and configured to work out of the box. But the
 
 Local ProFTPd server settings.
   --  SFTP server local LAN port : 2222
-  --  SFTP server local IPv4 address : $(hostname -i) ( fixed )
+  --  SFTP server local IPv4 address : $(if [ ${DHCP} == '0' ]; then echo "$(hostname -i) ( static IP )"; else echo "$(hostname).$(hostname -d) ( dhcp IP )"; fi)
 
 If you have configured your network for remote access using HAProxy or by DynDNS you should enter the details when prompted. It will be included in all new user account instruction emails along with their user credentials.
   --  SFTP remote WAN HTTPS URL address : none
@@ -114,7 +123,7 @@ done
 msg "Select a connection method from the menu. To connect remotely you must have HAProxy, Cloudflare or a Dynamic DNS service provider account up and running ( and know your connection address URL ). If the User has none of these then select 'None'."
 echo
 OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" )
-OPTIONS_LABELS_INPUT=( "Remote Access Address - connect remotely from the internet" "None - connect using LAN '$(hostname -i)' IP address only" )
+OPTIONS_LABELS_INPUT=( "Remote Access Address - connect remotely from the internet" "None - connect using LAN $(if [ ${DHCP} == '0' ]; then echo "$(hostname -i)"; else echo "$(hostname).$(hostname -d)"; fi)" )
 makeselect_input2
 singleselect SELECTED "$OPTIONS_STRING"
 if [ ${RESULTS} == TYPE01 ]; then
@@ -184,7 +193,7 @@ if [ ${PROFTPD_SETTING} == 0 ]; then
   sed -i 's|UseIPv6.*|UseIPv6 off|g' /etc/proftpd/proftpd.conf
   sed -i 's|#LoadModule mod_sftp.c|LoadModule mod_sftp.c|g' /etc/proftpd/modules.conf
   sed -i 's|#LoadModule mod_sftp_pam.c|LoadModule mod_sftp_pam.c|g' /etc/proftpd/modules.conf
-  sed -i "s|^#\s*SFTP_LOCAL_LAN_ADDRESS=.*|# SFTP_LOCAL_LAN_ADDRESS='$(hostname -i)'|g" /etc/proftpd/conf.d/global_default.conf
+  sed -i "s|^#\s*SFTP_LOCAL_LAN_ADDRESS=.*|# SFTP_LOCAL_LAN_ADDRESS='$(if [ ${DHCP} == '0' ]; then echo "$(hostname -i)"; else echo "$(hostname).$(hostname -d)"; fi)'|g" /etc/proftpd/conf.d/global_default.conf
   sed -i "s|^#\s*SFTP_LOCAL_LAN_PORT=.*|# SFTP_LOCAL_LAN_PORT='${SFTP_LOCAL_LAN_PORT}'|g" /etc/proftpd/conf.d/global_default.conf
   sed -i "s|^#\s*SFTP_REMOTE_WAN_ADDRESS=.*|# SFTP_REMOTE_WAN_ADDRESS='${SFTP_REMOTE_WAN_ADDRESS}'|g" /etc/proftpd/conf.d/global_default.conf
   sed -i "s|^\s*SFTP_REMOTE_WAN_PORT.*|# SFTP_REMOTE_WAN_PORT='${SFTP_REMOTE_WAN_PORT}'|g" /etc/proftpd/conf.d/global_default.conf
@@ -210,7 +219,7 @@ if [ "$(systemctl is-active proftpd)" == "inactive" ]; then
 fi
 
 #---- Finish Line ------------------------------------------------------------------
-if [ ${PROFTPD_SETTING} == 0 ]; then
+if [ ! ${PROFTPD_SETTING} == 1 ]; then
   section "Completion Status."
 
   info "${WHITE}Success.${NC} ProFTPd settings have been updated."

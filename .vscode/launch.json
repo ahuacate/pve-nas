@@ -5,11 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "pwa-chrome",
+            "type": "bashdb",
             "request": "launch",
-            "name": "Launch Chrome against localhost",
-            "url": "http://localhost:8080",
-            "webRoot": "${workspaceFolder}"
-        }
+            "name": "Bash-Debug (type in script name)",
+            "cwd": "${workspaceFolder}",
+            "program": "${command:AskForScriptName}",
+            "args": []
+        },
+    {
+        "type": "bashdb",
+        "request": "launch",
+        "name": "Bash-Debug (select script from list of sh files)",
+        "cwd": "${workspaceFolder}",
+        "program": "${command:SelectScriptName}",
+        "args": []
+    },
     ]
 }

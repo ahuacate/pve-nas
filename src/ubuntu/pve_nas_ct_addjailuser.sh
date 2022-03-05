@@ -7,17 +7,17 @@
 #---- Bash command to run script ---------------------------------------------------
 
 # Command to run script
-# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/scripts/source/ubuntu/pve_nas_ct_addjailuser.sh)"
+# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/src/ubuntu/pve_nas_ct_addjailuser.sh)"
 
 #---- Source -----------------------------------------------------------------------
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-COMMON_PVE_SOURCE="${DIR}/../../../../common/pve/source"
+COMMON_PVE_SRC="${DIR}/../../common/pve/src"
 
 #---- Dependencies -----------------------------------------------------------------
 
 # Run Bash Header
-source ${COMMON_PVE_SOURCE}/pvesource_bash_defaults.sh
+source ${COMMON_PVE_SRC}/pvesource_bash_defaults.sh
 
 # Install libcrack2
 if [ $(dpkg -s libcrack2 >/dev/null 2>&1; echo $?) != 0 ]; then
@@ -41,17 +41,32 @@ CHROOT="/srv/${HOSTNAME}/homes/chrootjail"
 HOME_BASE="${CHROOT}/homes/"
 GROUP='chrootjail'
 
-
-#---- Other Variables --------------------------------------------------------------
-
 # Easy Script Section Header Body Text
 SECTION_HEAD='PVE NAS'
+
+
+#---- Other Variables --------------------------------------------------------------
+#---- Other Files ------------------------------------------------------------------
+
+# User file list
+touch ${NEW_USERS}
+
+#---- Functions --------------------------------------------------------------------
 
 # Delete a username (permanent action)
 function delete_jailed_username() {
   while true; do
-    msg "Your jailed user accounts are:\n\n$(egrep "^*.injail:" /etc/passwd | awk -F':' '{print "  --  "$1}')\n"
-    read -p "Enter the user name you want to delete: " USERNAME
+    msg "User must identify and select a NAS user to delete from the menu...."
+    unset user_LIST
+    user_LIST+=( $(egrep "^*.injail:" /etc/passwd | awk -F':' 'BEGIN{OFS=FS} {if ($4 ~ /65608/) ($4="chrootjail"); print $1, $4 }' | sed -e '$anone:none') )
+    OPTIONS_VALUES_INPUT=$(printf '%s\n' "${user_LIST[@]}" | awk -F':' '{ print $1 }')
+    OPTIONS_LABELS_INPUT=$(printf '%s\n' "${user_LIST[@]}" | awk -F':' '{if ($1 != "none" && $2 != "none") print "User name: "$1, "| Member of user group: "$2; else print "None. Exit User delete script."; }')
+    makeselect_input1 "$OPTIONS_VALUES_INPUT" "$OPTIONS_LABELS_INPUT"
+    singleselect SELECTED "$OPTIONS_STRING"
+    if [ ${RESULTS} == "none" ]; then
+      break 
+    fi
+    USERNAME=${RESULTS}
     if [ $(egrep "^${USERNAME}:" /etc/passwd > /dev/null; echo $?) -eq 0 ]; then
       msg "User name ${WHITE}${USERNAME}${NC} exists."
       while true; do
@@ -160,12 +175,6 @@ function delete_jailed_username() {
   done
 }
 
-
-#---- Other Files ------------------------------------------------------------------
-
-# User file list
-touch ${NEW_USERS}
-
 #---- Body -------------------------------------------------------------------------
 
 #---- Creating PVE NAS Jailed Users
@@ -214,44 +223,23 @@ Selectable jail folder permission levels for each new user:
 
 All Home folders are automatically suffixed: 'username_injail'."
 echo
-TYPE01="${YELLOW}Create a new Jailed User Account${NC} - add a new user to the system."
-TYPE02="${YELLOW}Delete a Existing Jailed User Account${NC} - delete a user (permanent)."
-TYPE03="${YELLOW}Quit${NC} - quit this Jailed User account installation."
-PS3="Select the action type you want to do (entering numeric) : "
-msg "Your choices are:"
-options=("$TYPE01" "$TYPE02" "$TYPE03")
-select menu in "${options[@]}"; do
-  case $menu in
-    "$TYPE01")
-      USER_TYPE=1
-      echo
-      break
-      ;;
-    "$TYPE02")
-      USER_TYPE=2
-      echo
-      break
-      ;;
-    "$TYPE03")
-      USER_TYPE=3
-      echo
-      msg "You have chosen not to proceed. Moving on..."
-      echo
-      sleep 1
-      break
-      ;;
-    *) warn "Invalid entry. Try again.." >&2
-  esac
-done
+OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" "TYPE03" )
+OPTIONS_LABELS_INPUT=( "Create a new Jailed User Account - add a new user to the system" \
+"Delete a Existing Jailed User Account - delete a user (permanent)" \
+"None. Exit this User account installer" )
+makeselect_input2
+singleselect SELECTED "$OPTIONS_STRING"
+# Set installer type
+TYPE=${RESULTS}
 
 
 #---- Create a new jailed user
-if [ ${USER_TYPE} = 1 ]; then
+if [ ${TYPE} == TYPE01 ]; then
   #---- Checking Prerequisites
   section "Checking Prerequisites."
   # Checking SSHD status
   msg "Checking SSHD status ..."
-  if [ "$(systemctl is-active --quiet sshd; echo $?) -eq 0" ]; then
+  if [ "$(systemctl is-active --quiet sshd; echo $?)" == '0' ]; then
     info "SSHD status: ${GREEN}active${NC}."
     SSHD_STATUS=0
     PRE_CHECK_01=0
@@ -263,7 +251,7 @@ if [ ${USER_TYPE} = 1 ]; then
   echo
   # Checking for Chrootjail group
   msg "Checking chrootjail group status..."
-  if [ "$(getent group chrootjail >/dev/null; echo $?) -ne 0" ]; then
+  if [ $(getent group chrootjail >/dev/null; echo $?) == '0' ]; then
     info "chrootjail status: ${GREEN}active${NC}."
     PRE_CHECK_02=0
   else
@@ -283,7 +271,7 @@ if [ ${USER_TYPE} = 1 ]; then
   echo
   # Checking for sshd Chrootjail Match Group
   msg "Checking for sshd chrootjail match group..."
-  if [ $(grep -Fxq "Match Group chrootjail" /etc/ssh/sshd_config > /dev/null; echo $?) = 0 ]; then
+  if [ "$(grep -Fxq "Match Group chrootjail" /etc/ssh/sshd_config > /dev/null; echo $?)" == '0' ]; then
     info "sshd chrootjail match group status: ${GREEN}active${NC}."
     PRE_CHECK_04=0
   else
@@ -293,7 +281,7 @@ if [ ${USER_TYPE} = 1 ]; then
   echo
   # Checking for Subsystem sftp setting
   msg "Checking sshd Subsystem sftp setting..."
-  if [ $(grep -Fxq "Subsystem       sftp    internal-sftp" /etc/ssh/sshd_config > /dev/null; echo $?) = 0 ]; then
+  if [ "$(grep -Fxq "Subsystem       sftp    internal-sftp" /etc/ssh/sshd_config > /dev/null; echo $?)" == '0' ]; then
     info "sshd subsystem sftp status: ${GREEN}active${NC}."
     PRE_CHECK_05=0
   else
@@ -376,12 +364,12 @@ if [ ${USER_TYPE} = 1 ]; then
           [Yy]*)
             SSHD_STATUS=0
             # Start SSH service
-            if [ $(systemctl is-active ssh.service) != "active" ]; then
+            if [ $(systemctl is-active ssh.service) != 'active' ]; then
               msg "Enabling SSHD server..."
               systemctl start ssh.service
               systemctl enable ssh.service &> /dev/null
               while true; do
-                if [ $(systemctl is-active ssh.service) == "active" ]; then
+                if [ $(systemctl is-active ssh.service) == 'active' ]; then
                   info "OpenBSD Secure Shell server: ${GREEN}active (running).${NC}"
                   echo
                   break
@@ -394,12 +382,12 @@ if [ ${USER_TYPE} = 1 ]; then
             SSHD_STATUS=1
             msg "You have chosen to disable SSH server. Your users will NOT be able to use SSH (Rsync/SFTP) services."
             # Disable SSH service
-            if [ $(systemctl is-active ssh.service) == "active" ]; then
+            if [ $(systemctl is-active ssh.service) == 'active' ]; then
               msg "Disabling SSHD server..."
               systemctl stop ssh.service
               systemctl disable ssh.service &> /dev/null
               while true; do
-                if [ $(systemctl is-active ssh.service) != "active" ]; then
+                if [ $(systemctl is-active ssh.service) != 'active' ]; then
                   info "OpenBSD Secure Shell server: ${RED}inactive (dead).${NC} (and disabled)"
                   echo
                   break
@@ -428,7 +416,7 @@ if [ ${USER_TYPE} = 1 ]; then
       input_username_val
       USERNAME=${USERNAME,,}_injail
       msg "All jailed usernames are automatically suffixed: ${YELLOW}${USERNAME}${NC}. Checking username availability..."
-      if [ $(id -u ${USERNAME} 2>/dev/null; echo $?) = 0 ] || [ $(egrep "${USERNAME}" /etc/passwd > /dev/null; echo $?) = 0 ]; then
+      if [ $(id -u ${USERNAME} 2>/dev/null; echo $?) == '0' ] || [ $(egrep "${USERNAME}" /etc/passwd > /dev/null; echo $?) == '0' ]; then
         warn "The user '${USERNAME}' already exists."
         while true; do
           read -p "Do you want to try another user name [y/n]? " -n 1 -r YN
@@ -455,24 +443,24 @@ if [ ${USER_TYPE} = 1 ]; then
     done
     echo
     msg "Every new jailed user account has a private Home folder and a optional level of access to other PVE NAS shared folders. Choosing the level of shared folder access sets restrictions you want to apply to the new user."
-    LEVEL01="Home + Shared Public folder only." >/dev/null
-    LEVEL02="Home + Shared Public, Photo, Video (Movies, Series, Documentary, Homevideo) folders." >/dev/null
-    LEVEL03="Home + Shared Public, Photo, Video (all), Music, Audio & Books folders." >/dev/null
-    PS3="Select your new users folder access rights (entering numeric) : "
-    echo
-    select level_type in "$LEVEL01" "$LEVEL02" "$LEVEL03"; do
-      echo
-      info "You have selected: \n\t${WHITE}$level_type${NC}"
-      echo
-      break
-    done
-    if [ "$level_type" = "$LEVEL01" ]; then
-      JAIL_TYPE='level01'
-    elif [ "$level_type" = "$LEVEL02" ]; then
-      JAIL_TYPE='level02'
-    elif [ "$level_type" = "$LEVEL03" ]; then
-      JAIL_TYPE='level03'
-    fi
+    msg "Select your new users folder access rights ..."
+    OPTIONS_VALUES_INPUT=( "LEVEL01" "LEVEL02" "LEVEL03" )
+    OPTIONS_LABELS_INPUT=( "Home + Shared Public folder only" \
+    "Home + Shared Public, Photo, Video (Movies, Series, Documentary, Homevideo) folders" \
+    "Home + Shared Public, Photo, Video (all), Music, Audio & Books folders" )
+    makeselect_input2
+    singleselect SELECTED "$OPTIONS_STRING"
+    # Set type
+    JAIL_TYPE=${RESULTS}
+    echo $JAIL_TYPE
+    # level_type=${RESULTS}
+    # if [ "$level_type" = "$LEVEL01" ]; then
+    #   JAIL_TYPE='level01'
+    # elif [ "$level_type" = "$LEVEL02" ]; then
+    #   JAIL_TYPE='level02'
+    # elif [ "$level_type" = "$LEVEL03" ]; then
+    #   JAIL_TYPE='level03'
+    # fi
     # Create User password
     input_userpwd_val
     echo
@@ -487,6 +475,25 @@ if [ ${USER_TYPE} = 1 ]; then
       echo
       case $YN in
         [Yy]*)
+          # Reconfirm
+          while true; do
+            read -p "Are you sure [y/n]? " -n 1 -r YN
+            echo
+            case $YN in
+              [Yy]*)
+                echo
+                break 2
+                ;;
+              [Nn]*)
+                echo
+                break 3
+                ;;
+              *)
+                warn "Error! Entry must be 'y' or 'n'. Try again..."
+                echo
+                ;;
+            esac
+          done
           echo
           break
           ;;
@@ -590,7 +597,7 @@ if [ ${USER_TYPE} = 1 ]; then
       fi
 
       # Level 01 Bind mounts
-      if [ ${JAIL_TYPE} = "level01" ]; then
+      if [ "${JAIL_TYPE}" == LEVEL01 ]; then
         mkdir -p ${HOME_BASE}${USER}/public
         chmod 0750 ${HOME_BASE}${USER}/public
         chown -R ${USER}:${GROUP} ${HOME_BASE}${USER}/public
@@ -612,7 +619,7 @@ if [ ${USER_TYPE} = 1 ]; then
         fi
 
       # Level 02 Bind mounts
-      elif [ ${JAIL_TYPE} = "level02" ]; then
+      elif [ "${JAIL_TYPE}" == LEVEL02 ]; then
         msg "Creating ${USER} share mount point folders..."
         mkdir -p ${HOME_BASE}${USER}/share
         mkdir -p ${HOME_BASE}${USER}/share/{downloads,photo,public,video}
@@ -701,7 +708,7 @@ if [ ${USER_TYPE} = 1 ]; then
         fi
 
       #Level 03 Bind mounts
-      elif [ ${JAIL_TYPE} = "level03" ]; then
+      elif [ "${JAIL_TYPE}" == LEVEL03 ]; then
         msg "Creating ${USER} share mount point folders..."
         mkdir -p ${HOME_BASE}${USER}/share
         mkdir -p ${HOME_BASE}${USER}/share/{audio,books,downloads,music,photo,public,video}
@@ -830,7 +837,7 @@ if [ ${USER_TYPE} = 1 ]; then
     done <<< $( cat ${NEW_USERS} )
 
     #---- Email User SSH Keys
-    if [ $(dpkg -s ssmtp >/dev/null 2>&1; echo $?) = 0 ] && [ $(grep -qs "^root:*" /etc/ssmtp/revaliases >/dev/null; echo $?) = 0 ]; then
+    if [ $(dpkg -s ssmtp >/dev/null 2>&1; echo $?) == '0' ] && [ $(grep -qs "^root:*" /etc/ssmtp/revaliases >/dev/null; echo $?) == '0' ]; then
       section "$SECTION_HEAD - Email User Credentials & SSH keys"
       echo
       msg_box "#### PLEASE READ CAREFULLY - EMAIL NEW USER CREDENTIALS ####\n
@@ -876,16 +883,25 @@ fi
 
 
 #---- Create a new jailed user
-if [ ${USER_TYPE} = 2 ]; then
+if [ ${TYPE} == TYPE02 ]; then
   delete_jailed_username
 fi
 
 
-#---- Finish Line ------------------------------------------------------------------
-section "Completion Status."
+#---- Exit the script
+if [ ${TYPE} == TYPE03 ]; then
+  msg "You have chosen not to proceed. Moving on..."
+  echo
+fi
 
-msg "${WHITE}Success.${NC}"
-echo
+
+#---- Finish Line ------------------------------------------------------------------
+if [ ! ${TYPE} == TYPE03 ]; then
+  section "Completion Status."
+
+  msg "${WHITE}Success.${NC}"
+  echo
+fi
 
 # Cleanup
 if [ -z "${PARENT_EXEC+x}" ]; then

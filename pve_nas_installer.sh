@@ -27,9 +27,7 @@ fi
 
 # Installer cleanup
 function installer_cleanup () {
-rm -R ${REPO_TEMP}/common &> /dev/null
 rm -R ${REPO_TEMP}/${GIT_REPO} &> /dev/null
-rm ${REPO_TEMP}/common.tar.gz &> /dev/null
 rm ${REPO_TEMP}/${GIT_REPO}.tar.gz &> /dev/null
 }
 
@@ -57,12 +55,12 @@ cd ${REPO_TEMP}
 #---- Other Files ------------------------------------------------------------------
 
 #---- Package loader
-if [ -f /mnt/pve/nas-*[0-9]-git/${GIT_USER}/developer_settings.git ] && [ -f /mnt/pve/nas-*[0-9]-git/${GIT_USER}/common/bash/source/pve_repo_loader.sh ]; then
+if [ -f /mnt/pve/nas-*[0-9]-git/${GIT_USER}/developer_settings.git ] && [ -f /mnt/pve/nas-*[0-9]-git/${GIT_USER}/${GIT_REPO}/common/bash/src/pve_repo_loader.sh ]; then
   # Developer Options loader
-  source /mnt/pve/nas-*[0-9]-git/${GIT_USER}/common/bash/source/pve_repo_loader.sh
+  source /mnt/pve/nas-*[0-9]-git/${GIT_USER}/${GIT_REPO}/common/bash/src/pve_repo_loader.sh
 else
   # Download Github loader
-  wget -qL - https://raw.githubusercontent.com/${GIT_USER}/common/master/bash/source/pve_repo_loader.sh -O ${REPO_TEMP}/pve_repo_loader.sh
+  wget -qL - https://raw.githubusercontent.com/${GIT_USER}/${GIT_REPO}/common/master/bash/src/pve_repo_loader.sh -O ${REPO_TEMP}/pve_repo_loader.sh
   chmod +x ${REPO_TEMP}/pve_repo_loader.sh
   source ${REPO_TEMP}/pve_repo_loader.sh
 fi
@@ -70,7 +68,7 @@ fi
 #---- Body -------------------------------------------------------------------------
 
 #---- Run Installer
-${REPO_TEMP}/${GIT_REPO}/scripts/${GIT_APP_SCRIPT}
+${REPO_TEMP}/${GIT_REPO}/src/${GIT_APP_SCRIPT}
 
 #---- Finish Line ------------------------------------------------------------------
 

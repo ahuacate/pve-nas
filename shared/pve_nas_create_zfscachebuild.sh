@@ -6,25 +6,415 @@
 
 #---- Source -----------------------------------------------------------------------
 #---- Dependencies -----------------------------------------------------------------
+
+# Storage Array List
+function storage_list() {
+  # 1=PATH:2=KNAME:3=PKNAME (or part cnt.):4=FSTYPE:5=TRAN:6=MODEL:7=SERIAL:8=SIZE:9=TYPE:10=ROTA:11=UUID:12=RM:13=LABEL:14=ZPOOLNAME:15=SYSTEM
+  # PVE All Disk array
+  # Output printf '%s\n' "${allSTORAGE[@]}"
+  unset allSTORAGE
+  while read -r line; do
+    #---- Set dev
+    dev=$(echo $line | awk -F':' '{ print $1 }')
+
+    #---- Set variables
+    # Partition Cnt (Col 3)
+    if ! [[ $(echo $line | awk -F':' '{ print $3 }') ]] && [[ "$(echo "$line" | awk -F':' '{ if ($1 ~ /^\/dev\/sd[a-z]$/ || $1 ~ /^\/dev\/nvme[0-9]n[0-9]$/) { print "0" } }')" ]]; then
+      # var3=$(partx -g ${dev} | wc -l)
+      if [[ $(lsblk ${dev} | grep -q part) ]]; then
+        var3=$(lsblk ${dev} | grep part | wc -l)
+      else
+        var3='0'
+      fi
+    else
+      var3=$(echo $line | awk -F':' '{ print $3 }')
+    fi
+
+    #---- ZFS_Members (Col 4)
+    if ! [[ $(echo $line | awk -F':' '{ print $4 }') ]] && [ "$(lsblk -nbr -o FSTYPE ${dev})" = "zfs_member" ] || [ "$(blkid -o value -s TYPE ${dev})" = "zfs_member" ]; then
+      var4='zfs_member'
+    else
+      var4=$(echo $line | awk -F':' '{ print $4 }')
+    fi
+
+    # Tran (Col 5)
+    if ! [[ $(echo $line | awk -F':' '{ print $5 }') ]]; then
+      var5=$(lsblk -nbr -o TRAN /dev/"$(lsblk -nbr -o PKNAME ${dev} | uniq | sed '/^$/d')" | uniq | sed '/^$/d')
+    else
+      var5=$(echo $line | awk -F':' '{ print $5 }')
+    fi
+
+    # Size (Col 8)
+    var8=$(lsblk -nbrd -o SIZE ${dev} | awk '{ $1=sprintf("%.0f",$1/(1024^3))"G" } {print $0}')
+
+    # Zpool Name or Cnt (Col 14)
+    if [[ "$(echo ${dev} | awk '{ if ($1 ~ /^\/dev\/sd[a-z]$/ || $1 ~ /^\/dev\/nvme[0-9]n[0-9]$/) { print "0" } }')" ]]; then
+      var14=$(lsblk -nbr -o PATH,KNAME,PKNAME,FSTYPE,TRAN,MODEL,SERIAL,SIZE,TYPE,ROTA,UUID,RM,LABEL | sed 's/ /:/g' | sed 's/$/:/' | sed 's/$/:0/' 2>/dev/null | grep -w "^$(echo ${dev} | awk '{ print $1".*[0-9]*$" }')\|^$(echo ${dev} | awk '{ print $1".*p[0-9]*$" }')" | awk -F':' '{ if ($4 == 'zfs_member') { print $0 }}' | wc -l)
+    elif [ "$(lsblk -nbr -o FSTYPE ${dev})" = "zfs_member" ] || [ "$(blkid -o value -s TYPE ${dev})" = "zfs_member" ]; then
+      var14=$(blkid -o value -s LABEL ${dev})
+    else
+      var14='0'
+    fi
+
+    # System (Col 15)
+    if [[ $(df -hT | grep /$ | grep -w '^rpool/.*') ]]; then
+      # ONLINE=$(zpool status rpool | grep -Po "\S*(?=\s*ONLINE)")
+      ONLINE=$(zpool status rpool | grep -Po "\S*(?=\s*ONLINE|\s*DEGRADED)")
+      unset ROOT_DEV
+      while read -r pool; do
+        if ! [ -b "/dev/disk/by-id/$pool" ]; then
+          continue
+        fi
+        ROOT_DEV+=( $(readlink -f /dev/disk/by-id/$pool) )
+      done <<< "$ONLINE"
+    elif [[ $(df -hT | grep /$ | grep -w '^/dev/.*') ]]; then
+      ROOT_DEV+=( $(df -hT | grep /$) )
+    fi
+    if [[ $(fdisk -l ${dev} 2>/dev/null | grep -E '(BIOS boot|EFI System|Linux swap|Linux LVM)' | awk '{ print $1 }') ]] || [[ "${ROOT_DEV[*]}" =~ "${dev}" ]]; then
+      var15='1'
+    else
+      var15='0'
+    fi
+
+    #---- Finished Output
+    allSTORAGE+=( "$(echo $line | awk -F':' -v var3=${var3} -v var4=${var4} -v var5=${var5} -v var8=${var8} -v var14=${var14} -v var15=${var15} 'BEGIN {OFS = FS}{ $3 = var3 } { $4 = var4 } {if ($5 == "") {$5 = var5;}} { $8 = var8 } { $14 = var14 } { $15 = var15 } { print $0 }')" )
+
+  done < <( lsblk -nbr -o PATH,KNAME,PKNAME,FSTYPE,TRAN,MODEL,SERIAL,SIZE,TYPE,ROTA,UUID,RM,LABEL | sed 's/ /:/g' | sed 's/$/:/' | sed 's/$/:0/' | sed '/^$/d' 2> /dev/null )
+}
+
+
 #---- Static Variables -------------------------------------------------------------
 #---- Other Variables --------------------------------------------------------------
+
+# USB Disk Storage minimum size (GB)
+STOR_MIN=10
+
 #---- Other Files ------------------------------------------------------------------
 #---- Body -------------------------------------------------------------------------
+
+#---- Prerequisites
+# Create storage list array
+storage_list
+
+# Create a output file
+unset storLIST
+for i in "${allSTORAGE[@]}"; do
+  storLIST+=( $(echo $i) )
+done
+
+# Check if any available SATA, NVme disks available
+if [ $(printf '%s\n' "${storLIST[@]}" | awk -F':' '{ if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $15 == 0 && ($4 == "zfs_member" || $4 != "zfs_member") && ($9 == "disk" || $9 == "part")) { print $0 } }' | wc -l) == 0 ]; then
+  msg "We could NOT detect any available SATA available disks. Disk(s) might have wrongly identifies as a 'system drive' because they contain Linux system partitions. To fix this issue, manually format the disk erasing all data before running this installation again.
+  Exiting the installation script. Bye..."
+  echo
+  exit 0
+fi
+
+#---- Creating the ZPOOL Tank
+section "Setup a USB ZFS Storage Pool"
+# 1=PATH:2=KNAME:3=PKNAME:4=FSTYPE:5=TRAN:6=MODEL:7=SERIAL:8=SIZE:9=TYPE:10=ROTA:11=UUID:12=RM:13=LABEL:14=ZPOOLNAME:15=SYSTEM
+
+
+# Set ZFS Storage Pool name
+while true; do
+  # No existing available ZFS Pools
+  if [ $(printf '%s\n' "${storLIST[@]}" | awk -F':' '{ if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $15 == 0 && $4 == "zfs_member" && ($9 == "disk" || $9 == "part")) { print $0 } }' | wc -l) == 0 ] && [ ! $(printf '%s\n' "${storLIST[@]}" | awk -F':' '{ if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $15 == 0 && $4 != "zfs_member" && ($9 == "disk" || $9 == "part")) { print $0 } }' | wc -l) == 0 ]; then
+    msg "No existing USB ZFS Storage Pools are available to the User. The User must create a new ZFS Storage Pool using any of the available disks or drive partitions shown below. If your disk wrongly identifies as a 'system drive' its because it contains Linux system partitions. To fix this issue, manually format the disk erasing all data before running this installation again. The standard default name for USB connected ZFS Storage Pools is 'usbtank'.\n"
+    printf '%s\n' "${storLIST[@]}" | awk -F':' -v RED=${RED} -v GREEN=${GREEN} -v NC=${NC} -v STOR_MIN=$STOR_MIN 'BEGIN{OFS=FS} $8 ~ /G$/ {if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $15 == 1) { print $1, $6, $8, $14, RED "not available" NC " - system drive" }} {if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $4 == "zfs_member" && $15 == 0) { print $1, $6, $8, $14, GREEN "OK" NC " - existing ZFS pool" } } {size=0.0+$8; if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $4 != "zfs_member" && $15 == 0 && $9 == "part" && size >= STOR_MIN) { print $1, $6, $8, $14, "partition only (excluded)" } } {if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $4 != "zfs_member" && $15 == 0 && $9 == "disk" && $3 -gt 0) { print $1, $6, $8, $14, GREEN "OK" NC " - disk inc. x"$3" partitions, x"$14" ZFS Pools (warning)" } } {if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $4 != "zfs_member" && $15 == 0 && $9 == "disk" && $3 == 0) { print $1, $6, $8, $14, GREEN "OK" NC " - disk no partitions (good)" } }' | column -t -s : -N "DEVICE,MODEL,SIZE,ZFS POOL,STATUS" | indent2
+    echo
+    msg "In the next steps the User must enter a new ZFS Storage Pool name and select a valid disk or drive partition to create a new ZFS Storage Pool."
+  elif [ ! $(printf '%s\n' "${storLIST[@]}" | awk -F':' '{ if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $15 == 0 && $4 == "zfs_member" && ($9 == "disk" || $9 == "part")) { print $0 } }' | wc -l) == 0 ]; then
+    # Existing available ZFS Pools
+    msg "The User has the option to mount an existing ZFS Storage Pool or create a new Pool on the available storage devices. Users options are shown below. If your device wrongly identifies as a 'system drive' its because it contains a Linux system partitions or a OS. To fix this issue, manually format the disk erasing all data before running this installation again.\n"
+    printf '%s\n' "${storLIST[@]}" | awk -F':' -v RED=${RED} -v GREEN=${GREEN} -v NC=${NC} -v STOR_MIN=$STOR_MIN 'BEGIN{OFS=FS} $8 ~ /G$/ {if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $15 == 1) { print $1, $6, $8, $14, RED "not available" NC " - system drive" }} {if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $4 == "zfs_member" && $15 == 0) { print $1, $6, $8, $14, GREEN "OK" NC " - existing ZFS pool" } } {size=0.0+$8; if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $4 != "zfs_member" && $15 == 0 && $9 == "part" && size >= STOR_MIN) { print $1, $6, $8, $14, "partition only (excluded)" } } {if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $4 != "zfs_member" && $15 == 0 && $9 == "disk" && $3 -gt 0) { print $1, $6, $8, $14, GREEN "OK" NC " - disk inc. x"$3" partitions, x"$14" ZFS Pools (warning)" } } {if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $4 != "zfs_member" && $15 == 0 && $9 == "disk" && $3 == 0) { print $1, $6, $8, $14, GREEN "OK" NC " - disk no partitions (good)" } }' | column -t -s : -N "DEVICE,MODEL,SIZE,ZFS POOL,STATUS" | indent2
+    echo
+    msg "If the User chooses to mount a existing ZFS Storage Pool enter the existing 'pool name' in the next step. The User will be given the option to mount this ZFS Storage Pool, retaining all existing pool data, or destroy and recreate it. The later will result in 100% loss of all the old ZFS Storage Pool dataset data. If the User chooses to create a new ZFS Storage Pool then in the next step enter a 'new pool name' and the User can select any valid disk or drive partition to create this new ZFS Storage Pool. In the next step enter a ZFS Storage Pool name."
+    echo
+  fi
+  read -p "Enter a ZFS Storage Pool name (i.e default is tank): " -e -i tank POOL
+  POOL=${POOL,,}
+  echo
+  if [[ $POOL = [Rr][Pp][Oo][Oo][Ll] ]]; then
+    warn "ZFS Storage Pool name '$POOL' is your default root ZFS Storage Pool.\nYou cannot use this. Try again..."
+    echo
+  elif [ $(printf '%s\n' "${storLIST[@]}" | awk -F':' -v pool=$POOL '{ if ($5 == "usb" && $4 == "zfs_member" && $14 == pool) { print $0 } }' | wc -l) != 0 ]; then
+    warn "ZFS Storage Pool name '$POOL' is an existing onboard USB ZFS Storage Pool.\nYou cannot use this name. Try again..."
+    echo
+  elif [ $(zfs list | grep -w "^$POOL" >/dev/null; echo $?) = 1 ]; then
+    ZPOOL_TYPE=0
+    info "ZFS Storage Pool name is set: ${YELLOW}$POOL${NC}"
+    echo
+    break
+  elif [ $(printf '%s\n' "${storLIST[@]}" | awk -F':' -v pool=$POOL '{ if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $4 == "zfs_member" && $14 == pool && $15 == 0) { print $0 } }' | wc -l) -gt 0 ]; then
+    warn "A ZFS Storage Pool named '$POOL' already exists:\n"
+    printf '%s\n' "${storLIST[@]}" | awk -F':' -v RED=${RED} -v GREEN=${GREEN} -v NC=${NC} -v pool=$POOL 'BEGIN{OFS=FS} {if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $4 == "zfs_member" && $14 == pool && $15 == 0) { print $1, $6, $8, $14, GREEN "OK" NC " - existing ZFS pool" } }' | column -t -s : -N "DEVICE,MODEL,SIZE,ZFS POOL,STATUS"
+    echo
+    # Make selection
+    OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" "TYPE03" "TYPE04" )
+    OPTIONS_LABELS_INPUT=( "Destroy & Rebuild - destroy & recreate a ZFS Storage Pool '$POOL'" \
+    "Use Existing - use the existing ZFS Storage Pool '$POOL'" \
+    "Destroy & Exit - destroy ZFS Storage Pool '$POOL' and exit installation" \
+    "None. Try another ZFS Storage Pool name" )
+    makeselect_input2
+    singleselect SELECTED "$OPTIONS_STRING"
+    # Set action
+    if [ ${RESULTS} == TYPE01 ]; then
+    warn "You have chosen to destroy ZFS Storage Pool '$POOL' on PVE $(echo $(hostname)). This action will result in ${UNDERLINE}permanent data loss${NC} ${WHITE}of all data stored in the existing ZFS Storage Pool '$POOL'. A clean new ZFS Storage Pool '$POOL' with then be re-created.${NC}\n"
+      while true; do
+        read -p "Are you sure you want to destroy ZFS Storage Pool '$POOL' and its datasets: [y/n]?" -n 1 -r YN
+        echo
+        case $YN in
+          [Yy]*)
+            ZPOOL_TYPE=1
+            msg "Destroying ZFS Storage Pool '$POOL'..."
+            # while read -r var; do
+            #   zfs unmount $var &> /dev/null
+            # done < <( zfs list -r $POOL | awk '{ print $1 }' | sed '1d' | sort -r -n )
+            zpool destroy -f $POOL &> /dev/null
+            zpool labelclear -f $(printf '%s\n' "${storLIST[@]}" | awk -F':' -v pool=$POOL '{if ($14 == pool) { print $1 } }') &> /dev/null
+            info "ZFS Storage Pool '$POOL' status: ${YELLOW}destroyed${NC}"
+            storage_list # Update storage list array
+            echo
+            break 2
+            ;;
+          [Nn]*)
+            echo
+            msg "You have chosen not to proceed with destroying ZFS Storage Pool '$POOL'.\nTry again..."
+            sleep 2
+            echo
+            break
+            ;;
+          *)
+            warn "Error! Entry must be 'y' or 'n'. Try again..."
+            echo
+            ;;
+        esac
+      done
+    elif [ ${RESULTS} == TYPE02 ]; then
+      ZPOOL_TYPE=2
+      info "You have chosen to use the existing ZFS Storage Pool '$POOL'.\nNo new ZFS Storage Pool will be created.\nZFS Storage Pool name is set: ${YELLOW}$POOL${NC} (existing ZFS Storage Pool)"
+      echo
+      break 2
+    elif [ ${RESULTS} == TYPE03 ]; then
+      msg "You have chosen to destroy ZFS Storage Pool '$POOL'. This action will result in ${UNDERLINE}permanent data loss${NC} of all data stored in the existing ZFS Storage Pool '$POOL'. After ZFS Storage Pool '$POOL' is destroyed this installation script with exit."
+      echo
+      while true; do
+        read -p "Are you sure to destroy ZFS Storage Pool '$POOL': [y/n]?" -n 1 -r YN
+        echo
+        case $YN in
+          [Yy]*)
+            msg "Destroying ZFS Storage Pool '$POOL'..."
+            # while read -r var; do
+            #   zfs unmount $var &> /dev/null
+            # done < <( zfs list -r $POOL | awk '{ print $1 }' | sed '1d' | sort -r -n )
+            zpool destroy -f $POOL &> /dev/null
+            zpool labelclear -f $(printf '%s\n' "${storLIST[@]}" | awk -F':' -v pool=$POOL '{if ($14 == pool) { print $1 } }') 2> /dev/null
+            echo
+            exit 0
+            ;;
+          [Nn]*)
+            echo
+            msg "You have chosen not to proceed with destroying ZFS Storage Pool '$POOL'.\nTry again..."
+            sleep 1
+            echo
+            break 2
+            ;;
+          *)
+            warn "Error! Entry must be 'y' or 'n'. Try again..."
+            echo
+            ;;
+        esac
+      done
+    elif [ ${RESULTS} == TYPE04 ]; then
+      msg "No problem. Try again..."
+      echo
+      break
+    fi
+  fi
+  if ! [ -z "${ZPOOL_TYPE+x}" ]; then
+    break
+  fi
+done
+
+
+#---- Confirm Root File System Partitioned Cache & Log Disks
+# 1=PATH:2=KNAME:3=PKNAME:4=FSTYPE:5=TRAN:6=MODEL:7=SERIAL:8=SIZE:9=TYPE:10=ROTA:11=UUID:12=RM:13=LABEL:14=ZPOOLNAME:15=SYSTEM
+
+unset free_cache_PARTITIONS
+free_cache_PARTITIONS+=( $(fdisk -l $(printf '%s\n' "${storLIST[@]}" | awk -F':' '{ if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $15 == 1 && $9 == "disk") { print $1 } }') | grep -i -w '.*Linux filesystem$' | awk 'BEGIN{OFS=":"} { print $1, $5 }' ) )
+
+if [ ! ${#free_cache_PARTITIONS[@]} == 0 ]; then
+echo hello
+fi
+
+printf '%s\n' "${free_cache_PARTITIONS[@]}" | wc -l
+
+
+for i in "${free_PARTITIONS[@]}"; do
+  fdisk -l $(printf '%s\n' "${storLIST[@]}" | awk -F':' -v j="$i" '{ if (($5 == "sata" || $5 == "ata" || $5 == "nvme") && $15 == 0 && $3 == j && $9 == "part") { print $1 } }')
+done
+
+
+
+fdisk -l /dev/sda | grep -E 'Linux filesystem'
+set +Eeuo pipefail
+if [ $(fdisk -l $(fdisk -l 2>/dev/null | grep -E 'BIOS boot|EFI System'| awk '{ print $1 }' | sort | sed 's/[0-9]*//g' | awk '!seen[$0]++') | grep -Ev 'BIOS boot|EFI System|Solaris /usr & Apple ZFS' | grep -E 'Linux filesystem' | awk '{ print $1 }' | wc -l) -ge 2 ]; then
+  msg "Confirming Proxmox Root File System partitions for ZFS ARC or L2ARC Cache & ZIL (logs) on $HOSTNAME ..."
+  echo
+  while true; do
+    read -p "Have you ${UNDERLINE}already partitioned${NC} $HOSTNAME root filesystem disk(s) for ARC or L2ARC Cache and ZIL: [y/n]?" -n 1 -r YN
+    echo
+    case $YN in
+      [Yy]*)
+        fdisk -l $(fdisk -l 2>/dev/null | grep -E '(BIOS boot|EFI System)'| awk '{ print $1 }' | sort | sed 's/[0-9]\+$//' | sed 's/p$//' | awk '!seen[$0]++') | grep -Ev '(BIOS boot|EFI System|Solaris /usr & Apple ZFS)' | grep -E 'Linux filesystem' | awk '{ print $1 }' > zfs_rootcachezil_disklist_var01
+        for f in $(cat zfs_rootcachezil_disklist_var01 | awk '{ print $1 }' | sed 's|/dev/||')
+          do read dev
+            echo "$dev" "$(ls -l /dev/disk/by-id | grep -E '(ata-*|nvme-*|scsi-*)' | grep -w "$f" | awk '{ print $9 }' | sed 's|/dev/disk/by-id/||')" "$(fdisk -l /dev/"$f" | grep -w "Disk /dev/"$f"" | awk '{print $3, $4}' | sed 's|,||')" "$(if [ $(cat /sys/block/"$(echo $f | sed 's/[0-9]\+$//' | sed 's/p$//')"/queue/rotational) == 0 ];then echo "ssd"; else echo "harddisk";fi)" >> zfs_rootcachezil_disklist_var02
+        done < zfs_rootcachezil_disklist_var01
+        msg "There are two different SSD caches that a ZFS pool can make use of:\n  1.  ZFS Intent Log, or ZIL, to buffer WRITE operations.\n  2.  ARC and L2ARC cache which are meant for READ operations.\nIn the next steps you will asked to select ZIL and ARC or L2ARC Cache disks.\nRemember ARC or L2ARC disks will be larger (default 64GiB) than ZIL disks (default 8GiB).\n\nSelect the disk, or two matching disks if you are configured for raid, to be used for: ${YELLOW}ARC or L2ARC Cache${NC} (excluding ZIL disks)."
+        # Make selection
+        unset choices
+        menu() {
+          echo "Available options:"
+          for i in "${!options[@]}"; do 
+              printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
+          done
+          if [[ "$msg" ]]; then echo "$msg"; fi
+        }
+        mapfile -t options < zfs_rootcachezil_disklist_var02
+        prompt="Check an option to select ARC or L2ARC cache\ndisk partitions (again to uncheck, ENTER when done): "
+        while menu && read -rp "$prompt" num && [[ "$num" ]]; do
+          [[ "$num" != *[![:digit:]]* ]] &&
+          (( num > 0 && num <= ${#options[@]} )) ||
+          { msg="Invalid option: $num"; continue; }
+          ((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
+          [[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"
+        done
+        echo
+        printf "Your selected ARC or L2ARC cache disk partitions are:\n"; msg=" nothing"
+        for i in ${!options[@]}; do
+          [[ "${choices[i]}" ]] && { printf "${YELLOW}Disk ID:${NC}  %s\n" "${options[i]}"; msg=""; } && echo $({ printf "%s" "${options[i]}"; msg=""; }) >> zpool_rootcache_disklist
+        done
+        echo
+        # Make selection
+        unset choices
+        awk -F " "  'NR==FNR {a[$1];next}!($1 in a) {print $0}' zpool_rootcache_disklist zfs_rootcachezil_disklist_var02 | awk '!seen[$0]++' | sort > zfs_rootzil_disklist_var01
+        msg "Now select the disk, or two matching disks if you are configured for raid, to be used for: ${YELLOW}ZIL Cache${NC}."
+        menu() {
+          echo "Available options:"
+          for i in ${!options[@]}; do 
+              printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
+          done
+          if [[ "$msg" ]]; then echo "$msg"; fi
+        }
+        mapfile -t options < zfs_rootzil_disklist_var01
+        prompt="Check an option to select SSD disks (again to uncheck, ENTER when done): "
+        while menu && read -rp "$prompt" num && [[ "$num" ]]; do
+          [[ "$num" != *[![:digit:]]* ]] &&
+          (( num > 0 && num <= ${#options[@]} )) ||
+          { msg="Invalid option: $num"; continue; }
+          ((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
+          [[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"
+        done
+        echo
+        printf "Your selected ZIL cache disk partitions are:\n"; msg=" nothing"
+        for i in ${!options[@]}; do
+          [[ "${choices[i]}" ]] && { printf "${YELLOW}Disk ID:${NC}  %s\n" "${options[i]}"; msg=""; } && echo $({ printf "%s" "${options[i]}"; msg=""; }) >> zpool_rootzil_disklist
+        done
+        echo
+        echo
+        if [ -s zpool_rootcache_disklist ]; then
+          msg "${YELLOW}You selected the following disks for ARC or L2ARC Cache:${NC}\n${WHITE}$(cat zpool_rootcache_disklist 2>/dev/null)${NC}"
+        else
+          msg "${YELLOW}You selected the following disks for ARC or L2ARC Cache:\n${WHITE}None. You have NOT selected any disks!${NC}"
+        fi
+        echo
+        if [ -s zpool_rootzil_disklist ]; then
+          msg "${YELLOW}You selected the following disks for ZIL:${NC}\n${WHITE}$(cat zpool_rootzil_disklist 2>/dev/null)${NC}"
+        else
+          msg "${YELLOW}You selected the following disks for ZIL:\n${WHITE}None. You have NOT selected any disks!${NC}"
+        fi
+        echo
+        while true; do
+          read -p "Confirm your ARC or L2ARC Cache and ZIL disk selection is correct: [y/n]?" -n 1 -r YN
+          echo
+          case $YN in
+            [Yy]*)
+              info "Success. Moving on."
+              ZFS_ROOTCACHE_READY=0
+              echo
+              break 2
+              ;;
+            [Nn]*)
+              echo
+              warn "No good. No problem. Try again."
+              rm {zfs_rootcachezil_disklist_var01,zfs_rootcachezil_disklist_var02,zfs_rootzil_disklist_var01,zpool_rootcache_disklist,zpool_rootzil_disklist} 2>/dev/null
+              sleep 2
+              echo
+              break
+              ;;
+            *)
+              warn "Error! Entry must be 'y' or 'n'. Try again..."
+              echo
+              ;;
+          esac
+        done
+        ;;
+      [Nn]*)
+        info "You have chosen not to set ARC or L2ARC Cache or ZIL on $HOSTNAME Proxmox OS root drives. You may choose to use dedicated SSD's for ZFS caching in the coming steps."
+        ZFS_ROOTCACHE_READY=1
+        fdisk -l $(fdisk -l 2>/dev/null | grep -E '(BIOS boot|EFI System)' | awk '{ print $1 }' | sort | sed 's/[0-9]\+$//' | sed 's/p$//' | awk '!seen[$0]++') | grep -Ev '(BIOS boot|EFI System|Solaris /usr & Apple ZFS)' | grep -E 'Linux filesystem' | awk '{ print $1 }' > zpool_rootcacheall_disklist_var01
+        for f in $(cat zpool_rootcacheall_disklist_var01 | awk '{ print $1 }' | sed 's|/dev/||')
+        do read dev
+          echo "$dev" "$(ls -l /dev/disk/by-id | grep -E '(ata-*|nvme-*|scsi-*)' | grep -w "$f" | awk '{ print $9 }' | sed 's|/dev/disk/by-id/||')" "$(fdisk -l /dev/"$f" | grep -w "Disk /dev/"$f"" | awk '{print $3, $4}' | sed 's|,||')" "$(if [ $(cat /sys/block/"$(echo $f | sed 's/[0-9]\+$//' | sed 's/p$//')"/queue/rotational) == 0 ];then echo "ssd"; else echo "harddisk";fi)" >> zpool_rootcacheall_disklist
+        done < zpool_rootcacheall_disklist_var01
+        echo
+        break
+        ;;
+      *)
+        warn "Error! Entry must be 'y' or 'n'. Try again..."
+        echo
+        ;;
+    esac
+  done
+else
+  ZFS_ROOTCACHE_READY=1
+  set +Eeuo pipefail
+  fdisk -l $(fdisk -l 2>/dev/null | grep -E '(BIOS boot|EFI System)'| awk '{ print $1 }' | sort | sed 's/[0-9]\+$//' | sed 's/p$//' | awk '!seen[$0]++') | grep -Ev '(BIOS boot|EFI System|Solaris /usr & Apple ZFS)' | grep -E 'Linux filesystem' | awk '{ print $1 }' > zpool_rootcacheall_disklist_var01
+  set -Eeuo pipefail
+  for f in $(cat zpool_rootcacheall_disklist_var01 | awk '{ print $1 }' | sed 's|/dev/||')
+  do read dev
+    echo "$dev" "$(ls -l /dev/disk/by-id | grep -E '(ata-*|nvme-*|scsi-*)' | grep -w "$f" | awk '{ print $9 }' | sed 's|/dev/disk/by-id/||')" "$(fdisk -l /dev/"$f" | grep -w "Disk /dev/"$f"" | awk '{print $3, $4}' | sed 's|,||')" "$(if [ $(cat /sys/block/"$(echo $f | sed 's/[0-9]\+$//' | sed 's/p$//')"/queue/rotational) == 0 ];then echo "ssd"; else echo "harddisk";fi)" >> zpool_rootcacheall_disklist
+  done < zpool_rootcacheall_disklist_var01
+fi
+set -Eeuo pipefail
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #---- Creating the ZPOOL Tank
 section "Setting up Zpool storage."
 
-# Set ZFS pool name
+#---- Set ZFS pool name
 msg "Setting up your ZPool storage devices..."
 while true; do
-  if [ $(zpool list | grep -iv '^rpool' | sed '1d' | wc -l) = 0 ]; then
+  if [ $(zpool list | grep -iv '^rpool' | sed '1d' | wc -l) == 0 ]; then
     msg "A common ZFS pool name is 'tank'. We recommended you use pool name 'tank' whenever you can."
-  elif [ $(zpool list | grep -iv '^rpool' | sed '1d' | wc -l) -ge 0 ]; then
-    msg "A common ZFS pool name is 'tank'. We recommended you use pool name 'tank' whenever you can. Your current ZFS pools and datasets are listed below. ${RED}[WARNING]${NC} If you ${UNDERLINE}choose to destroy any ZFS pool${NC} its associated datasets will also be ${UNDERLINE}permanently destroyed resulting in permanent loss${NC} of all dataset data. \n"
-    echo "$(zpool list -o name,size | grep -iv '^rpool'| column -t | indent2)"
+  elif [ ! $(zpool list | grep -iv '^rpool' | sed '1d' | wc -l) == 0 ]; then
+    msg "A common ZFS pool name is 'tank'. We recommended you use pool name 'tank' whenever you can. Your current ZFS pools and datasets are listed below. ${RED}[WARNING]${NC} If you choose to destroy any ZFS pool its associated datasets will also be permanently destroyed resulting in ${UNDERLINE}permanent loss${NC} of all dataset data.\n\n$(zpool list -o name,size | grep -iv '^rpool'| indent2)"
     echo
   fi
-  read -p "Enter your desired ZFS pool name (i.e default is tank): " -e -i tank POOL
+  read -p "Enter your desired ZFS pool name ( default is 'tank' ): " -e -i tank POOL
   POOL=${POOL,,}
   echo
   if [ $POOL = "rpool" ]; then
@@ -41,95 +431,85 @@ while true; do
     warn "A ZFS pool named '$POOL' already exists:"
     zfs list | grep -e "NAME\|^$POOL"| fold | awk '{ print $1,$2,$3 }' | column -t | sed "s/^/    /g"
     echo
-    TYPE01="${YELLOW}Destroy & Rebuild${NC} - destroy ZFS pool '$POOL' & create a new ZFS pool '$POOL'."
-    TYPE02="${YELLOW}Use Existing${NC} - use the existing ZFS pool '$POOL' storage."
-    TYPE03="${YELLOW}Destroy & Exit${NC} - destroy ZFS pool '$POOL' and exit installation."
-    TYPE04="${YELLOW}None. Try again${NC} - try another ZFS pool name."
-    PS3="Select the action type you want to do (entering numeric) : "
-    msg "Your available options are:"
-    options=("$TYPE01" "$TYPE02" "$TYPE03" "$TYPE04")
-    select menu in "${options[@]}"; do
-      case $menu in
-        "$TYPE01")
-          echo
-          warn "You have chosen to destroy ZFS pool '$POOL' on PVE $(echo $(hostname)). This action will result in ${UNDERLINE}permanent data loss${NC} ${WHITE}of all data stored in the existing ZFS pool '$POOL'. A clean new ZFS pool '$POOL' with then be re-created.${NC}\n"
-          while true; do
-            read -p "Are you sure you want to destroy ZFS pool '$POOL' and datasets: [y/n]?" -n 1 -r YN
+    # Make selection
+    OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" "TYPE03" "TYPE04" )
+    OPTIONS_LABELS_INPUT=( "Destroy & Rebuild - destroy & recreate a ZFS Storage Pool '$POOL'" \
+    "Use Existing - use the existing ZFS Storage Pool '$POOL'" \
+    "Destroy & Exit - destroy ZFS Storage Pool '$POOL' and exit installation" \
+    "None. Try another ZFS Storage Pool name" )
+    makeselect_input2
+    singleselect SELECTED "$OPTIONS_STRING"
+    # Set action
+    if [ ${RESULTS} == TYPE01 ]; then
+      warn "You have chosen to destroy ZFS pool '$POOL' on PVE $(echo $(hostname)). This action will result in ${UNDERLINE}permanent data loss${NC} ${WHITE}of all data stored in the existing ZFS pool '$POOL'. A new ZFS pool named '$POOL' will be re-created.${NC}\n"
+      while true; do
+        read -p "Are you sure you want to destroy ZFS pool '$POOL' and datasets: [y/n]?" -n 1 -r YN
+        echo
+        case $YN in
+          [Yy]*)
+            ZPOOL_TYPE=0
+            msg "Destroying ZFS pool '$POOL'..."
+            while read -r var; do
+              zfs unmount $var &> /dev/null
+            done < <( zfs list -r $POOL | awk '{ print $1 }' | sed '1d' | sort -r -n )
+            zpool destroy -f $POOL &> /dev/null
+            info "ZFS pool '$POOL' status: ${YELLOW}destroyed${NC}"
             echo
-            case $YN in
-              [Yy]*)
-                ZPOOL_TYPE=0
-                msg "Destroying ZFS pool '$POOL'..."
-                while read -r var; do
-                  zfs unmount $var &> /dev/null
-                done < <( zfs list -r $POOL | awk '{ print $1 }' | sed '1d' | sort -r -n )
-                zpool destroy -f $POOL &> /dev/null
-                info "ZFS pool '$POOL' status: ${YELLOW}destroyed${NC}"
-                echo
-                break 2
-                ;;
-              [Nn]*)
-                echo
-                msg "You have chosen not to proceed with destroying ZFS pool '$POOL'.\nTry again..."
-                sleep 2
-                echo
-                break
-                ;;
-              *)
-                warn "Error! Entry must be 'y' or 'n'. Try again..."
-                echo
-                ;;
-            esac
-          done
-          ;;
-        "$TYPE02")
-          echo
-          ZPOOL_TYPE=1
-          info "You have chosen to use the existing ZFS pool '$POOL'.\nNo new ZFS pool will be created.\nZFS pool name is set: ${YELLOW}$POOL${NC} (existing ZFS pool)"
-          echo
-          break 2
-          ;;
-        "$TYPE03")
-          echo
-          msg "You have chosen to destroy ZFS pool '$POOL'. This action will result in ${UNDERLINE}permanent data loss${NC} of all data stored in the existing ZFS pool '$POOL'. After ZFS pool '$POOL' is destroyed this installation script with exit."
-          echo
-          while true; do
-            read -p "Are you sure to destroy ZFS pool '$POOL': [y/n]?" -n 1 -r YN
+            break 2
+            ;;
+          [Nn]*)
             echo
-            case $YN in
-              [Yy]*)
-                msg "Destroying ZFS pool '$POOL'..."
-                while read -r var; do
-                  zfs unmount $var &> /dev/null
-                done < <( zfs list -r $POOL | awk '{ print $1 }' | sed '1d' | sort -r -n )
-                zpool destroy -f $POOL &> /dev/null
-                echo
-                exit 0
-                ;;
-              [Nn]*)
-                echo
-                msg "You have chosen not to proceed with destroying ZFS pool '$POOL'.\nTry again..."
-                sleep 1
-                echo
-                break 2
-                ;;
-              *)
-                warn "Error! Entry must be 'y' or 'n'. Try again..."
-                echo
-                ;;
-            esac
-          done
-          ;;
-        "$TYPE04")
-          echo
-          msg "No problem. Try again..."
-          echo
-          break
-          # done
-          ;;
-        *) warn "Invalid entry. Try again.." >&2
-      esac
-    done
+            msg "You have chosen not to proceed with destroying ZFS pool '$POOL'.\nTry again..."
+            sleep 2
+            echo
+            break
+            ;;
+          *)
+            warn "Error! Entry must be 'y' or 'n'. Try again..."
+            echo
+            ;;
+        esac
+      done
+    elif [ ${RESULTS} == TYPE02 ]; then
+      ZPOOL_TYPE=1
+      info "You have chosen to use the existing ZFS pool '$POOL'.\nNo new ZFS pool will be created.\nZFS pool name is set: ${YELLOW}$POOL${NC} (existing ZFS pool)"
+      echo
+      break 2
+    elif [ ${RESULTS} == TYPE03 ]; then
+      msg "You have chosen to destroy ZFS pool '$POOL' and exit this installation. This action will result in ${UNDERLINE}permanent data loss${NC} of all data stored in the existing ZFS pool '$POOL'."
+      echo
+      while true; do
+        read -p "Are you sure to destroy ZFS pool '$POOL': [y/n]?" -n 1 -r YN
+        echo
+        case $YN in
+          [Yy]*)
+            msg "Destroying ZFS pool '$POOL'..."
+            while read -r var; do
+              zfs unmount $var &> /dev/null
+            done < <( zfs list -r $POOL | awk '{ print $1 }' | sed '1d' | sort -r -n )
+            zpool destroy -f $POOL &> /dev/null
+            echo
+            exit 0
+            ;;
+          [Nn]*)
+            echo
+            msg "You have chosen not to proceed with destroying ZFS pool '$POOL'.\nTry again..."
+            sleep 1
+            echo
+            break 2
+            ;;
+          *)
+            warn "Error! Entry must be 'y' or 'n'. Try again..."
+            echo
+            ;;
+        esac
+      done
+    elif [ ${RESULTS} == TYPE04 ]; then
+      msg "No problem. Try again..."
+      echo
+      break
+      # done
+    fi
   fi
   if ! [ -z "${ZPOOL_TYPE+x}" ]; then
     break
@@ -137,7 +517,7 @@ while true; do
 done
 
 
-# Identifying PVE Boot Disks
+#---- Identifying PVE Boot Disks
 if [ $ZPOOL_TYPE = 0 ]; then
 msg "Identifying Proxmox PVE, OS and Boot hard disk ID..."
 # boot disks
@@ -169,7 +549,7 @@ echo
 
 # Confirm Root File System Partitioned Cache & Log Disks
 set +Eeuo pipefail
-if [ $(fdisk -l $(fdisk -l 2>/dev/null | grep -E 'BIOS boot|EFI System'| awk '{ print $1 }' | sort | sed 's/[0-9]*//g' | awk '!seen[$0]++') | grep -Ev 'BIOS boot|EFI System|Solaris /usr & Apple ZFS' | grep -E 'Linux filesystem' | awk '{ print $1 }' | wc -l)  -ge 2 ]; then
+if [ $(fdisk -l $(fdisk -l 2>/dev/null | grep -E 'BIOS boot|EFI System'| awk '{ print $1 }' | sort | sed 's/[0-9]*//g' | awk '!seen[$0]++') | grep -Ev 'BIOS boot|EFI System|Solaris /usr & Apple ZFS' | grep -E 'Linux filesystem' | awk '{ print $1 }' | wc -l) -ge 2 ]; then
   msg "Confirming Proxmox Root File System partitions for ZFS ARC or L2ARC Cache & ZIL (logs) on $HOSTNAME ..."
   echo
   while true; do
@@ -183,6 +563,8 @@ if [ $(fdisk -l $(fdisk -l 2>/dev/null | grep -E 'BIOS boot|EFI System'| awk '{ 
             echo "$dev" "$(ls -l /dev/disk/by-id | grep -E '(ata-*|nvme-*|scsi-*)' | grep -w "$f" | awk '{ print $9 }' | sed 's|/dev/disk/by-id/||')" "$(fdisk -l /dev/"$f" | grep -w "Disk /dev/"$f"" | awk '{print $3, $4}' | sed 's|,||')" "$(if [ $(cat /sys/block/"$(echo $f | sed 's/[0-9]\+$//' | sed 's/p$//')"/queue/rotational) == 0 ];then echo "ssd"; else echo "harddisk";fi)" >> zfs_rootcachezil_disklist_var02
         done < zfs_rootcachezil_disklist_var01
         msg "There are two different SSD caches that a ZFS pool can make use of:\n  1.  ZFS Intent Log, or ZIL, to buffer WRITE operations.\n  2.  ARC and L2ARC cache which are meant for READ operations.\nIn the next steps you will asked to select ZIL and ARC or L2ARC Cache disks.\nRemember ARC or L2ARC disks will be larger (default 64GiB) than ZIL disks (default 8GiB).\n\nSelect the disk, or two matching disks if you are configured for raid, to be used for: ${YELLOW}ARC or L2ARC Cache${NC} (excluding ZIL disks)."
+        # Make selection
+        unset choices
         menu() {
           echo "Available options:"
           for i in "${!options[@]}"; do 
@@ -204,8 +586,9 @@ if [ $(fdisk -l $(fdisk -l 2>/dev/null | grep -E 'BIOS boot|EFI System'| awk '{ 
         for i in ${!options[@]}; do
           [[ "${choices[i]}" ]] && { printf "${YELLOW}Disk ID:${NC}  %s\n" "${options[i]}"; msg=""; } && echo $({ printf "%s" "${options[i]}"; msg=""; }) >> zpool_rootcache_disklist
         done
-        unset choices
         echo
+        # Make selection
+        unset choices
         awk -F " "  'NR==FNR {a[$1];next}!($1 in a) {print $0}' zpool_rootcache_disklist zfs_rootcachezil_disklist_var02 | awk '!seen[$0]++' | sort > zfs_rootzil_disklist_var01
         msg "Now select the disk, or two matching disks if you are configured for raid, to be used for: ${YELLOW}ZIL Cache${NC}."
         menu() {
@@ -229,45 +612,44 @@ if [ $(fdisk -l $(fdisk -l 2>/dev/null | grep -E 'BIOS boot|EFI System'| awk '{ 
         for i in ${!options[@]}; do
           [[ "${choices[i]}" ]] && { printf "${YELLOW}Disk ID:${NC}  %s\n" "${options[i]}"; msg=""; } && echo $({ printf "%s" "${options[i]}"; msg=""; }) >> zpool_rootzil_disklist
         done
-        unset choices
-      echo
-      echo
-      if [ -s zpool_rootcache_disklist ]; then
-        msg "${YELLOW}You selected the following disks for ARC or L2ARC Cache:${NC}\n${WHITE}$(cat zpool_rootcache_disklist 2>/dev/null)${NC}"
-      else
-        msg "${YELLOW}You selected the following disks for ARC or L2ARC Cache:\n${WHITE}None. You have NOT selected any disks!${NC}"
-      fi
-      echo
-      if [ -s zpool_rootzil_disklist ]; then
-        msg "${YELLOW}You selected the following disks for ZIL:${NC}\n${WHITE}$(cat zpool_rootzil_disklist 2>/dev/null)${NC}"
-      else
-        msg "${YELLOW}You selected the following disks for ZIL:\n${WHITE}None. You have NOT selected any disks!${NC}"
-      fi
-      echo
-      while true; do
-        read -p "Confirm your ARC or L2ARC Cache and ZIL disk selection is correct: [y/n]?" -n 1 -r YN
         echo
-        case $YN in
-          [Yy]*)
-            info "Success. Moving on."
-            ZFS_ROOTCACHE_READY=0
-            echo
-            break 2
-            ;;
-          [Nn]*)
-            echo
-            warn "No good. No problem. Try again."
-            rm {zfs_rootcachezil_disklist_var01,zfs_rootcachezil_disklist_var02,zfs_rootzil_disklist_var01,zpool_rootcache_disklist,zpool_rootzil_disklist} 2>/dev/null
-            sleep 2
-            echo
-            break
-            ;;
-          *)
-            warn "Error! Entry must be 'y' or 'n'. Try again..."
-            echo
-            ;;
-        esac
-      done
+        echo
+        if [ -s zpool_rootcache_disklist ]; then
+          msg "${YELLOW}You selected the following disks for ARC or L2ARC Cache:${NC}\n${WHITE}$(cat zpool_rootcache_disklist 2>/dev/null)${NC}"
+        else
+          msg "${YELLOW}You selected the following disks for ARC or L2ARC Cache:\n${WHITE}None. You have NOT selected any disks!${NC}"
+        fi
+        echo
+        if [ -s zpool_rootzil_disklist ]; then
+          msg "${YELLOW}You selected the following disks for ZIL:${NC}\n${WHITE}$(cat zpool_rootzil_disklist 2>/dev/null)${NC}"
+        else
+          msg "${YELLOW}You selected the following disks for ZIL:\n${WHITE}None. You have NOT selected any disks!${NC}"
+        fi
+        echo
+        while true; do
+          read -p "Confirm your ARC or L2ARC Cache and ZIL disk selection is correct: [y/n]?" -n 1 -r YN
+          echo
+          case $YN in
+            [Yy]*)
+              info "Success. Moving on."
+              ZFS_ROOTCACHE_READY=0
+              echo
+              break 2
+              ;;
+            [Nn]*)
+              echo
+              warn "No good. No problem. Try again."
+              rm {zfs_rootcachezil_disklist_var01,zfs_rootcachezil_disklist_var02,zfs_rootzil_disklist_var01,zpool_rootcache_disklist,zpool_rootzil_disklist} 2>/dev/null
+              sleep 2
+              echo
+              break
+              ;;
+            *)
+              warn "Error! Entry must be 'y' or 'n'. Try again..."
+              echo
+              ;;
+          esac
+        done
         ;;
       [Nn]*)
         info "You have chosen not to set ARC or L2ARC Cache or ZIL on $HOSTNAME Proxmox OS root drives. You may choose to use dedicated SSD's for ZFS caching in the coming steps."
