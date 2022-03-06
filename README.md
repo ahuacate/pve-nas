@@ -33,9 +33,9 @@ The NAS is a full turnkey installation. After start-up simply add your user acco
 - [x] Layer 2/3 Network Switches
 - [x] Network Gateway (*recommend xxx.xxx.xxx.5*)
 - [x] Network DHCP server (*recommend xxx.xxx.xxx.5*)
-- [x] Network DNS server (*recommend is xxx.xxx.xxx.5*)
+- [x] Network DNS server (*recommend xxx.xxx.xxx.5*)
 - [x] Network Name Server
-- [x] Network Name Server resolves all device hostnames (static and dhcp IP)
+- [x] Network Name Server resolves all device hostnames (*static and dhcp IP*)
 - [x] Local domain name is set on all network devices (*see note below*)
 - [x] PVE host hostnames are suffixed with a numeric (*i.e pve-01 or pve01 or pve1*)
 - [x] PVE host has internet access
@@ -54,16 +54,18 @@ Note: The network Local Domain or Search domain must be set. We recommend only t
 
 <h2>Installation Options</h2>
 
-If you want dedicated hard-metal NAS, not Proxmox hosted, look at this GitHub [repository](https://github.com/ahuacate/nas-hardmetal). In includes configuration scripts for Synology NAS appliances.
+If you want a dedicated hard-metal NA ( not Proxmox hosted ) look at this GitHub [repository](https://github.com/ahuacate/nas-hardmetal). Included are configuration scripts for Synology NAS appliances.
 
 For PVE hosts limited by RAM, less than 16GB, we recommended our Ubuntu-based NAS builds. They require only 512MB RAM and run on a lightweight PVE CT.
 <ol>
 <li><h4><b>Ubuntu NAS - PVE SATA/NVMe</b></h4></li>
+
 PVE ZFS pool backend, Ubuntu frontend.
 
 Proxmox manages the ZFS storage pool backend while Ubuntu does the frontend. ZFS Raid levels depend on the number of disks installed. You also have the option of configuring ZFS cache using SSD drives. ZFS cache will provide High-Speed disk I/O.
 
 <li><h4><b>Ubuntu NAS - USB disks</b></h4></li>
+
 PVE USB disk backend, Ubuntu frontend.
 
 Here the NAS stores all data on an external USB disk. This is for SFF computing hardware such as Intel NUCs. Your NAS ZFS storage pool backend is fully managed by the Proxmox host.
@@ -91,7 +93,7 @@ Our Easy Scripts have preset configurations. The installer may accept or decline
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/pve_nas_installer.sh)"
 ```
-> PVE Hosted 'Ubuntu NAS' Administration Toolbox. For creating new user accounts, installing optional add-ons and upgrading your NAS OS. Run in a PVE host SSH terminal.
+> PVE Hosted 'Ubuntu NAS' Administration Toolbox. For creating and deleting user accounts, installing optional add-ons and upgrading your NAS OS. Run in a PVE host SSH terminal.
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/pve_nas_toolbox.sh)"
@@ -123,7 +125,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master
     - [2.1. Create new User Accounts](#21-create-new-user-accounts)
         - [2.1.1. Create "Power User" Accounts](#211-create-power-user-accounts)
         - [2.1.2. Create Restricted and Jailed User Accounts (Standard Users)](#212-create-restricted-and-jailed-user-accounts-standard-users)
-- [3. Other Toolbox options](#3-other-toolbox-options)
+- [3. Easy Script Toolbox options](#3-easy-script-toolbox-options)
 
 <!-- /TOC -->
 
@@ -244,7 +246,7 @@ The default root password is 'ahuacate'. You can always change it at a later sta
 
 'Easy Scripts' are available for administrative tasks. (i.e for creating new user accounts, installing SMTP servers, and more.)
 
-Run the following Easy Script and select the task you want to perform.
+> Run the following Easy Script and select the task you want to perform.
 
 ```Ubuntu NAS administration tasks
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/pve_nas_toolbox.sh)"
@@ -276,7 +278,7 @@ When creating a new user you are given the choice to select a Level of `chrootja
 
 **Level 1**  -  This user is restricted to their private home folder for data storage and the NAS public folder only. This is ideal for persons whom you DO NOT want to share any media data with. Typical users maybe: persons wanting Cloud storage and nothing more.
 
-**Level 2**  -  This user is restricted to their private home folder for data storage, limited access to the NAS public folder and media library (i.e Restricted to movies, tv, documentary, homevideo folders only). The user is also setup with a downloads folder and special folders within their chrootjail home folder for sharing photos and homevideos with other users or a media server like Emby or Jellyfin. Typical users maybe: family, close friends and children because of limited media access.
+**Level 2**  -  This user is restricted to their private home folder for data storage, limited access to the NAS public folder and media library (i.e Restricted to movies, tv, documentary, homevideo folders only). The user is also setup with a downloads folder and special folders within their chrootjail home folder for sharing photos and homevideos with other users or a media server like Emby or Jellyfin. Typical users are: family, close friends and children because of limited media access.
 
 **Level 3**  -  This user is restricted to their private home folder for data storage, limited access to the NAS public, audio, books folders, and media library (i.e This user level is NOT restricted so they can view ALL media content). The user is also set up with a downloads folder and special folders within their chrootjail home folder for sharing photos and home videos with other users or a media server like Emby or Jellyfin. Typical users maybe: Power users and adults with full media library access.
 
@@ -317,11 +319,17 @@ The options are options are:
 All Home folders are automatically suffixed: `username_injail`.
 
 
-# 3. Other Toolbox options
+# 3. Easy Script Toolbox options
 User options include:
-1. Upgrade NAS Ubuntu OS
+1. Upgrade NAS Ubuntu OS & install patches
 2. Install & Configure Fail2ban
 3. Install & Configure a SSMTP server
 4. Install & Configure ProFTPd server
+
+> Run the following Easy Script and select the task you want to perform.
+
+```Ubuntu NAS administration tasks
+bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/pve_nas_toolbox.sh)"
+```
 
 <hr>
