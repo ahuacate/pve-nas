@@ -65,7 +65,7 @@ Here the NAS stores all data on an external USB disk. This is for SFF computing 
 
 The other build option is a NAS OS solution VM.
 <ol>
-<li> <h4><b>OMV NAS (HBA Adapter)</b><h/4> - PCIe SATA/NVMe HBA card pass-thru based on OpenMediaVault (Under Development)
+<li> <h4><b>OMV NAS (HBA Adapter)</b><h/4> - PCIe SATA/NVMe HBA card pass-thru based on Open Media Vault (Under Development)
 
 Here a dedicated PCIe SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i) supports all NAS disks. All OMV storage disks, including any ZFS Cache SSDs, must be connected to the HBA Adapter Card. You cannot co-mingle OMV disks with the PVE hosts mainboard onboard SATA/NVMe devices. OMV manages both backend and frontend.</li>
 </ol>
