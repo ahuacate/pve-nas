@@ -26,27 +26,30 @@ All NAS installation types are fully configured and ready built to support Ahuac
 
 The NAS is a full turnkey installation. After start-up simply add your user accounts using our Easy Script toolbox.
 
-> It's mandatory your NAS has ALL the required folder share exports, subfolders, permissions, ACLs, Users & Groups ( i.e medialab, homelab and privatelab ), localdomain and networking (SMB/CIF and NFS) configured. If not our CTs for Sonarr, Radarr, Jellyfin and more will not work.
-
-
 <h2>Prerequisites</h2>
 
 **Network Prerequisites**
 
 - [x] Layer 2/3 Network Switches
-- [x] Network Gateway (*default is xxx.xxx.xxx.5*)
-- [x] Network DHCP server (*default is xxx.xxx.xxx.5*)
-- [x] Search domain server
-- [x] Local domain is set on all network devices (see note below)
+- [x] Network Gateway (*recommend xxx.xxx.xxx.5*)
+- [x] Network DHCP server (*recommend xxx.xxx.xxx.5*)
+- [x] Network DNS server (*recommend is xxx.xxx.xxx.5*)
+- [x] Network Name Server
+- [x] Network Name Server resolves all device hostnames (static and dhcp IP)
+- [x] Local domain name is set on all network devices (*see note below*)
+- [x] PVE host hostnames are suffixed with a numeric (*i.e pve-01 or pve01 or pve1*)
 - [x] PVE host has internet access
 
 Note: The network Local Domain or Search domain must be set. We recommend only top-level domain (spTLD) names for residential and small networks names because they cannot be resolved across the internet. Routers and DNS servers know, in theory, not to forward ARPA requests they do not understand onto the public internet. It is best to choose one of our listed names. Best use one of the following valid names: local, home.arpa, localdomain or lan only.
+
+**Required Prerequisites**
+
+- [x] PVE host installed with a minimum of 1x spare empty disk.
 
 **Optional Prerequisites**
 
 - [ ] PVE Host SSD/NVMe Cache (Recommended)
 - [ ] PCIe SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i)
-- [ ] PVE host installed with a minimum of 1x spare empty disk. ( PVE hosted NAS only )
 
 
 <h2>Installation Options</h2>
@@ -83,14 +86,12 @@ Easy Scripts automate the installation and/or configuration processes. Easy Scri
 Our Easy Scripts have preset configurations. The installer may accept or decline the ES values. If you decline the User will be prompted to input all required configuration settings. PLEASE read our guide if you are unsure.
 
 
-<h4>1. PVE Hosted NAS Installer</h4>
-Run in a PVE host SSH terminal.
+> Use this script to start the PVE NAS Installer. The User will be prompted to select a installation type. Run in a PVE host SSH terminal.
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/pve_nas_installer.sh)"
 ```
-<h4>2. PVE Hosted 'Ubuntu NAS' Administration Toolbox</h4>
-Run in a PVE host SSH terminal.
+> PVE Hosted 'Ubuntu NAS' Administration Toolbox. For creating new user accounts, installing optional add-ons and upgrading your NAS OS. Run in a PVE host SSH terminal.
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/pve_nas_toolbox.sh)"
