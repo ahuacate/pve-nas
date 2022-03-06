@@ -40,7 +40,7 @@ The NAS is a full turnkey installation. After start-up simply add your user acco
 - [x] PVE host hostnames are suffixed with a numeric (*i.e pve-01 or pve01 or pve1*)
 - [x] PVE host has internet access
 
-Note: The network Local Domain or Search domain must be set. We recommend only top-level domain (spTLD) names for residential and small networks names because they cannot be resolved across the internet. Routers and DNS servers know, in theory, not to forward ARPA requests they do not understand onto the public internet. It is best to choose one of our listed names. Best use one of the following valid names: local, home.arpa, localdomain or lan only.
+Note: The network Local Domain or Search domain must be set. We recommend only top-level domain (spTLD) names for residential and small networks names because they cannot be resolved across the internet. Routers and DNS servers know, in theory, not to forward ARPA requests they do not understand onto the public internet. It is best to choose one of our listed names: local, home.arpa, localdomain or lan only. Do NOT use made-up names.
 
 **Required Prerequisites**
 
