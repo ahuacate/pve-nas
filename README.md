@@ -1,7 +1,5 @@
 <h1>PVE File Server (NAS)</h1>
 
-<h2>Introduction</h2>
-
 Our PVE File Server is a fully functional NAS built on a Proxmox CT or VM.
 
 The CT type is a lightweight Ubuntu container requiring only 512Mb of RAM. Storage is provided by Proxmox ZFS Raid using SATA/NVMe or USB connected disks.
@@ -11,7 +9,7 @@ The VM type is based on Open Media Vault and requires a SATA/SAS HBA Card.
 
 <h2>Features</h2>
 
-All NAS installation types are fully configured and ready to support all Ahuacate CTs or VMs. Each NAS type install includes:
+All NAS installation types are fully configured and ready built to support Ahuacate CTs or VMs. Each NAS type install includes:
 
 * Power User & Group Accounts
     * Groups: medialab:65605, homelab:65606, privatelab:65607, chrootjail:65608
@@ -38,11 +36,11 @@ The NAS is a full turnkey installation. After start-up simply add your user acco
 - [x] Layer 2/3 Network Switches
 - [x] Network Gateway (*default is xxx.xxx.xxx.5*)
 - [x] Network DHCP server (*default is xxx.xxx.xxx.5*)
-- [x] Searchdomain server
-- [x] Local domain is set on all network devices
+- [x] Search domain server
+- [x] Local domain is set on all network devices (see note below)
 - [x] PVE host has internet access
 
-The network Local Domain or Search domain must be set. We recommend only top-level domain (spTLD) names for residential and small networks names because they cannot be resolved across the internet. Routers and DNS servers know, in theory, not to forward ARPA requests they do not understand onto the public internet. It is best to choose one of our listed names. Best use one of the following valid names: local, home.arpa, localdomain or lan only.
+Note: The network Local Domain or Search domain must be set. We recommend only top-level domain (spTLD) names for residential and small networks names because they cannot be resolved across the internet. Routers and DNS servers know, in theory, not to forward ARPA requests they do not understand onto the public internet. It is best to choose one of our listed names. Best use one of the following valid names: local, home.arpa, localdomain or lan only.
 
 **Optional Prerequisites**
 
@@ -57,17 +55,17 @@ If you want dedicated hard-metal NAS, not Proxmox hosted, look at this GitHub [r
 
 For PVE hosts limited by RAM, less than 16GB, we recommended our Ubuntu-based NAS builds. They require only 512MB RAM and run on a lightweight PVE CT.
 <ol>
-<li> Ubuntu NAS (PVE SATA/NVMe) - PVE ZFS pool backend, Ubuntu frontend
+<li> <h4><b>Ubuntu NAS (PVE SATA/NVMe)</b></h4> - PVE ZFS pool backend, Ubuntu frontend
 
 Proxmox manages the ZFS storage pool backend while Ubuntu does the frontend. ZFS Raid levels depend on the number of disks installed. You also have the option of configuring ZFS cache using SSD drives. ZFS cache will provide High-Speed disk I/O.</li>
-<li>Ubuntu NAS (USB disks) - PVE USB disk backend, Ubuntu frontend
+<li><h4><b>Ubuntu NAS (USB disks)</b></h4> - PVE USB disk backend, Ubuntu frontend
 
 Here the NAS stores all data on an external USB disk. This is for SFF computing hardware such as Intel NUCs. Your NAS ZFS storage pool backend is fully managed by the Proxmox host.</li>
 </ol>
 
 The other build option is a NAS OS solution VM.
 <ol>
-<li>OMV NAS (HBA Adapter) - PCIe SATA/NVMe HBA card pass-thru based on OpenMediaVault (Under Development)
+<li><h4><b>OMV NAS (HBA Adapter)</b><h/4> - PCIe SATA/NVMe HBA card pass-thru based on OpenMediaVault (Under Development)
 
 Here a dedicated PCIe SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i) supports all NAS disks. All OMV storage disks, including any ZFS Cache SSDs, must be connected to the HBA Adapter Card. You cannot co-mingle OMV disks with the PVE hosts mainboard onboard SATA/NVMe devices. OMV manages both backend and frontend.</li>
 </ol>
