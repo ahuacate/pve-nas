@@ -55,7 +55,7 @@ If you want dedicated hard-metal NAS, not Proxmox hosted, look at this GitHub [r
 
 For PVE hosts limited by RAM, less than 16GB, we recommended our Ubuntu-based NAS builds. They require only 512MB RAM and run on a lightweight PVE CT.
 <ol>
-<li> <h4><b>Ubuntu NAS (PVE SATA/NVMe)</b></h4> - PVE ZFS pool backend, Ubuntu frontend
+<li><h4><b>Ubuntu NAS (PVE SATA/NVMe)</b></h4> - PVE ZFS pool backend, Ubuntu frontend
 
 Proxmox manages the ZFS storage pool backend while Ubuntu does the frontend. ZFS Raid levels depend on the number of disks installed. You also have the option of configuring ZFS cache using SSD drives. ZFS cache will provide High-Speed disk I/O.</li>
 <li><h4><b>Ubuntu NAS (USB disks)</b></h4> - PVE USB disk backend, Ubuntu frontend
@@ -64,8 +64,9 @@ Here the NAS stores all data on an external USB disk. This is for SFF computing 
 </ol>
 
 The other build option is a NAS OS solution VM.
+
 <ol>
-<li> <h4><b>OMV NAS (HBA Adapter)</b><h/4> - PCIe SATA/NVMe HBA card pass-thru based on Open Media Vault (Under Development)
+<li><h4><b>OMV NAS (HBA Adapter)</b><h/4> - PCIe SATA/NVMe HBA card pass-thru based on Open Media Vault (Under Development)
 
 Here a dedicated PCIe SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i) supports all NAS disks. All OMV storage disks, including any ZFS Cache SSDs, must be connected to the HBA Adapter Card. You cannot co-mingle OMV disks with the PVE hosts mainboard onboard SATA/NVMe devices. OMV manages both backend and frontend.</li>
 </ol>
