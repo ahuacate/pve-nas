@@ -54,7 +54,7 @@ Note: The network Local Domain or Search domain must be set. We recommend only t
 
 <h2>Installation Options</h2>
 
-If you want a dedicated hard-metal NA ( not Proxmox hosted ) look at this GitHub [repository](https://github.com/ahuacate/nas-hardmetal). Included are configuration scripts for Synology NAS appliances.
+If you want a dedicated hard-metal NAS ( not Proxmox hosted ) look at this GitHub [repository](https://github.com/ahuacate/nas-hardmetal). Included are configuration scripts for Synology NAS appliances.
 
 For PVE hosts limited by RAM, less than 16GB, we recommended our Ubuntu-based NAS builds. They require only 512MB RAM and run on a lightweight PVE CT.
 <ol>
