@@ -68,6 +68,7 @@ fi
 #---- Body -------------------------------------------------------------------------
 
 #---- Run Installer
+chmod +x ${REPO_TEMP}/${GIT_REPO}/src/${GIT_APP_SCRIPT}
 ${REPO_TEMP}/${GIT_REPO}/src/${GIT_APP_SCRIPT}
 
 #---- Finish Line ------------------------------------------------------------------
