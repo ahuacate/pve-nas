@@ -2,14 +2,14 @@
 
 Our PVE File Server is a fully functional NAS built on a Proxmox CT or VM.
 
-The CT type is a lightweight Ubuntu container requiring only 512Mb of RAM. Storage is provided by Proxmox ZFS Raid using SATA/NVMe or USB connected disks.
+The CT NAS is built on a Ubuntu container requiring only 512Mb of RAM. Storage is provided by Proxmox host based on ZFS or LVM Raid using SATA/NVMe disks. There is also basic storage using USB connected ext4 disks.
 
-The VM type is based on Open Media Vault and requires a SATA/SAS HBA Card.
+The VM NAS is based on Open Media Vault (OMV) and requires a SATA/SAS HBA Card.
 
 
 <h2>Features</h2>
 
-All NAS installation types are fully configured and ready built to support Ahuacate CTs or VMs. Each NAS type install includes:
+All our NAS types are fully configured and ready built to support Ahuacate CTs or VMs. Each NAS type install includes:
 
 * Power User & Group Accounts
     * Groups: medialab:65605, homelab:65606, privatelab:65607, chrootjail:65608
@@ -22,7 +22,7 @@ All NAS installation types are fully configured and ready built to support Ahuac
 * NFS 4.1 exports ready for PVE hosts backend storage mounts
 * SMB 3.0 shares with access permissions set ( by User Group accounts )
 * Has a Local Domain option to set ( i.e .local, .localdomain, .home.arpa, .lan )
-* Toolbox of Easy Scripts to create or delete User accounts, perform OS upgrades and install add-on services (i.e SSMTP, ProFTP)
+* Easy Script Toolbox to create or delete User accounts, perform OS upgrades and install add-on services (i.e SSMTP, ProFTP and ZFS Cache)
 
 The NAS is a full turnkey installation. After start-up simply add your user accounts using our Easy Script toolbox.
 
@@ -48,7 +48,8 @@ Note: The network Local Domain or Search domain must be set. We recommend only t
 
 **Optional Prerequisites**
 
-- [ ] PVE Host SSD/NVMe Cache (Recommended)
+- [ ] PVE Host installed SSD/NVMe ZFS Cache (Ubuntu CT builds)
+- [ ] HBA installed SSD/NVMe ZFS Cache (OMV VM builds)
 - [ ] PCIe SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i)
 
 
@@ -56,7 +57,7 @@ Note: The network Local Domain or Search domain must be set. We recommend only t
 
 If you want a dedicated hard-metal NAS ( not Proxmox hosted ) look at this GitHub [repository](https://github.com/ahuacate/nas-hardmetal). Included are configuration scripts for Synology NAS appliances.
 
-For PVE hosts limited by RAM, less than 16GB, we recommended our Ubuntu-based NAS builds. They require only 512MB RAM and run on a lightweight PVE CT.
+For PVE hosts limited by RAM, less than 16GB, we recommended our Ubuntu-based NAS builds. This requires only 512MB RAM and runs on a lightweight PVE CT.
 <ol>
 <li><h4><b>Ubuntu NAS - PVE SATA/NVMe</b></h4></li>
 
@@ -64,11 +65,11 @@ PVE ZFS pool backend, Ubuntu frontend.
 
 Proxmox manages the ZFS storage pool backend while Ubuntu does the frontend. ZFS Raid levels depend on the number of disks installed. You also have the option of configuring ZFS cache using SSD drives. ZFS cache will provide High-Speed disk I/O.
 
-<li><h4><b>Ubuntu NAS - USB disks</b></h4></li>
+<li><h4><b>Ubuntu NAS - Basic USB disk</b></h4></li>
 
 PVE USB disk backend, Ubuntu frontend.
 
-Here the NAS stores all data on an external USB disk. This is for SFF computing hardware such as Intel NUCs. Your NAS ZFS storage pool backend is fully managed by the Proxmox host.
+Here the NAS stores all data on a single external USB disk. This is for SFF computing hardware such as Intel NUCs. Your NAS ZFS storage pool backend is fully managed by the Proxmox host.
 </ol>
 
 The other build option is a NAS OS solution VM.
@@ -93,7 +94,7 @@ Our Easy Scripts have preset configurations. The installer may accept or decline
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/pve_nas_installer.sh)"
 ```
-> PVE Hosted 'Ubuntu NAS' Administration Toolbox. For creating and deleting user accounts, installing optional add-ons and upgrading your NAS OS. Run in a PVE host SSH terminal.
+> PVE Hosted 'Ubuntu NAS' Easy Script Toolbox. For creating and deleting user accounts, installing optional add-ons and upgrading your NAS OS. Run in a PVE host SSH terminal.
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/pve_nas_toolbox.sh)"
@@ -134,7 +135,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master
 # 1. PVE Hosted NAS
 Your PVE NAS host hardware determines your NAS frontend options.
   - OMV requires a PCIe SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i).
-  - Ubuntu Frontend, PVE ZFS backend (SATA or USB).
+  - Ubuntu Frontend, PVE ZFS backend (SATA/SAS or USB).
 
 ## 1.1. PVE Host required RAM 
 

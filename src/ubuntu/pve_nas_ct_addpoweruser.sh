@@ -31,6 +31,14 @@ if [ $(id -u) != 0 ]; then
   exit 0
 fi
 
+# Check SSMTP Server Status
+if [ $(pct exec $CTID -- dpkg -s ssmtp >/dev/null 2>&1; echo $?) == 0 ]; then
+  SSMTP_STATUS='0'
+else
+  SSMTP_STATUS='1'
+  display_msg='\nBefore proceeding with this installer we RECOMMEND you first install our SSMTP server package. A working SSMTP server emails the NAS System Administrator all new User login credentials, SSH keys, application specific login credentials and written guidelines. A SSMTP server makes NAS administration much easier. Also be alerted about unwarranted login attempts and other system critical alerts. SSMTP Server installer is available in our NAS Toolbox.\n\n    --  SSMTP Mail Server status: not installed\n'
+fi
+
 #---- Static Variables -------------------------------------------------------------
 
 # List of new users
@@ -151,7 +159,7 @@ section "Create a New Power User Account"
 
 echo
 msg_box "#### PLEASE READ CAREFULLY - CREATING POWER USER ACCOUNTS ####
-
+$(if [ ${SSMTP_STATUS} == '1' ]; then echo ${display_msg}; fi)
 Power Users are trusted persons with privileged access to data and application resources hosted on your PVE NAS. Power Users are NOT standard users! Standard users are added at a later stage. Each new Power Users security permissions are controlled by Linux groups. Group security permission levels are as follows:
 
   --  GROUP NAME    -- PERMISSIONS

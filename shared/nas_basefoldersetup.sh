@@ -25,13 +25,14 @@ fi
 
 #---- Set DIR Schema ( PVE host or CT mkdir )
 if [ $(uname -a | grep -Ei --color=never '.*linux*|.*pve*' &> /dev/null; echo $?) == 0 ]; then
-  DIR_SCHEMA="/${POOL}/${HOSTNAME}"
+  DIR_SCHEMA=${PVE_SRC_MNT}
+  # DIR_SCHEMA="/${POOL}/${HOSTNAME}"
 else
   # Select or input a storage path ( set DIR_SCHEMA )
   unset print_DISPLAY
   print_DISPLAY+=( $(df -hx tmpfs --output=target | sed '1d' | grep -v '/$\|^/dev.*\|^/rpool.*\|/etc.*') )
   section "Select a Storage Location"
-  msg_box "#### PLEASE READ CAREFULLY - SELECT A STORAGE LOCATION ####\n\nA storage location is a parent directory, volume or ZPool where your new folder shares will be created. A scan shows the following available storage locations:\n\n$(printf -- --' %s\n' "${print_DISPLAY[@]}" | indent2)\n\nThe User must now select a storage location. Or select 'other' to manually input the full storage path."
+  msg_box "#### PLEASE READ CAREFULLY - SELECT A STORAGE LOCATION ####\n\nA storage location is a parent directory, LVM volume or ZPool where your new folder shares will be created. A scan shows the following available storage locations:\n\n$(printf -- --' %s\n' "${print_DISPLAY[@]}" | indent2)\n\nThe User must now select a storage location. Or select 'other' to manually input the full storage path."
   echo
   msg "Select a storage location from the menu:"
   unset stor_LIST
@@ -103,7 +104,7 @@ done < ${COMMON_DIR}/nas/src/nas_basefoldersubfolderlist
 
 
 #---- Setting Folder Permissions
-section "Create and Set Folder Permissions."
+section "Create and Set Folder Permissions"
 
 # Create Default Proxmox Share points
 msg_box "#### PLEASE READ CAREFULLY - SHARED FOLDERS ####\n\nShared folders are the basic directories where you can store files and folders on your NAS. Below is a list of our default NAS shared folders. You can create additional 'custom' shared folders in the coming steps.\n\n$(while IFS=',' read -r var1 var2; do msg "\t--  /srv/${HOSTNAME}/'${var1}'"; done <<< $( printf '%s\n' "${nas_basefolder_LIST[@]}" ))"
@@ -172,8 +173,9 @@ while true; do
   esac
 done
 
-# Create Proxmox ZFS Share points
-msg "Creating ${SECTION_HEAD} base /$POOL/$HOSTNAME folder shares..."
+# Create Proxmox Share points
+msg "Creating ${SECTION_HEAD} base ${PVE_SRC_MNT} folder shares..."
+# msg "Creating ${SECTION_HEAD} base /$POOL/$HOSTNAME folder shares..."
 echo
 while IFS=',' read -r dir desc group permission acl_01 acl_02 acl_03 acl_04 acl_05; do
   if [ -d "${DIR_SCHEMA}/${dir}" ]; then

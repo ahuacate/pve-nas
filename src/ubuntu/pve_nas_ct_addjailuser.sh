@@ -31,6 +31,14 @@ if [ $(id -u) != 0 ]; then
   exit 0
 fi
 
+# Check SSMTP Server Status
+if [ $(pct exec $CTID -- dpkg -s ssmtp >/dev/null 2>&1; echo $?) == 0 ]; then
+  SSMTP_STATUS='0'
+else
+  SSMTP_STATUS='1'
+  display_msg='\nBefore proceeding with this installer we RECOMMEND you first install our SSMTP server package. A working SSMTP server emails the NAS System Administrator all new User login credentials, SSH keys, application specific login credentials and written guidelines. A SSMTP server makes NAS administration much easier. Also be alerted about unwarranted login attempts and other system critical alerts. SSMTP Server installer is available in our NAS Toolbox.\n\n    --  SSMTP Mail Server status: not installed\n'
+fi
+
 #---- Static Variables -------------------------------------------------------------
 
 # List of new users
@@ -182,6 +190,7 @@ function delete_jailed_username() {
 section "Create a Restricted and Jailed User Account"
 echo
 msg_box "#### PLEASE READ CAREFULLY - RESTRICTED & JAILED USER ACCOUNTS ####\n
+$(if [ ${SSMTP_STATUS} == '1' ]; then echo ${display_msg}; fi)
 Every new user is restricted or jailed within their own home folder. In Linux this is called a chroot jail. But you can select the level of restrictions which are applied to each newly created user. This technique can be quite useful if you want a particular user to be provided with a limited system environment, limited folder access and at the same time keep them separate from your main server system and other personal data.
 
 The chroot technique will automatically jail selected users belonging to the 'chrootjail' user group upon ssh or sftp login.
@@ -223,7 +232,7 @@ Selectable jail folder permission levels for each new user:
 
 All Home folders are automatically suffixed: 'username_injail'."
 echo
-OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" "TYPE03" )
+OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" "TYPE00" )
 OPTIONS_LABELS_INPUT=( "Create a new Jailed User Account - add a new user to the system" \
 "Delete a Existing Jailed User Account - delete a user (permanent)" \
 "None. Exit this User account installer" )
@@ -889,14 +898,14 @@ fi
 
 
 #---- Exit the script
-if [ ${TYPE} == TYPE03 ]; then
+if [ ${TYPE} == TYPE00 ]; then
   msg "You have chosen not to proceed. Moving on..."
   echo
 fi
 
 
 #---- Finish Line ------------------------------------------------------------------
-if [ ! ${TYPE} == TYPE03 ]; then
+if [ ! ${TYPE} == TYPE00 ]; then
   section "Completion Status."
 
   msg "${WHITE}Success.${NC}"

@@ -102,27 +102,27 @@ echo
 
 #---- Run Installer
 section "Run a Ubuntu NAS Toolbox task"
-OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" "TYPE03" "TYPE04" "TYPE05" "TYPE06" "TYPE07" )
-OPTIONS_LABELS_INPUT=( "Power User Account - create or delete account" "Jailed User Account - create or delete account" "Upgrade NAS OS - software packages, OS and patches" "Install Fail2Ban $(if [ $(pct exec $CTID -- dpkg -s fail2ban >/dev/null 2>&1; echo $?) = 0 ]; then echo "( installed & active )"; else echo "( not installed )"; fi)" "Install SSMTP Email Server $(if [ $(pct exec $CTID -- dpkg -s ssmtp >/dev/null 2>&1; echo $?) = 0 ] && [ $(pct exec $CTID -- grep -qs "^root:*" /etc/ssmtp/revaliases >/dev/null; echo $?) = 0 ]; then echo "( installed & active )"; else echo "( not installed )"; fi)" "Install ProFTPd Server $(if [ $(pct exec $CTID -- dpkg -s proftpd-core >/dev/null 2>&1; echo $?) = 0 ]; then echo "( installed & active )"; else echo "( not installed )"; fi)" "None. Exit this installer" )
+OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" "TYPE03" "TYPE04" "TYPE05" "TYPE06" "TYPE07" "TYPE00" )
+OPTIONS_LABELS_INPUT=( "Power User Account - create or delete account" "Jailed User Account - create or delete account" "Upgrade NAS OS - software packages, OS and patches" "Install Fail2Ban $(if [ $(pct exec $CTID -- dpkg -s fail2ban >/dev/null 2>&1; echo $?) = 0 ]; then echo "( installed & active )"; else echo "( not installed )"; fi)" "Install SSMTP Email Server $(if [ $(pct exec $CTID -- dpkg -s ssmtp >/dev/null 2>&1; echo $?) = 0 ] && [ $(pct exec $CTID -- grep -qs "^root:*" /etc/ssmtp/revaliases >/dev/null; echo $?) = 0 ]; then echo "( installed & active )"; else echo "( not installed - A RECOMMENDED installation )"; fi)" "Install ProFTPd Server $(if [ $(pct exec $CTID -- dpkg -s proftpd-core >/dev/null 2>&1; echo $?) = 0 ]; then echo "( installed & active )"; else echo "( not installed )"; fi)" "Add ZFS Cache - create ARC/L2ARC/ZIL cache with dedicated SSD/NVMe drives" "None. Exit this installer" )
 makeselect_input2
 singleselect SELECTED "$OPTIONS_STRING"
 
-if [ ${RESULTS} == TYPE01 ]; then
+if [ ${RESULTS} == 'TYPE01' ]; then
   #---- Create New Power User Accounts
   pct exec $CTID -- bash -c "/tmp/${GIT_REPO}/src/ubuntu/pve_nas_ct_addpoweruser.sh"
-elif [ ${RESULTS} == TYPE02 ]; then
+elif [ ${RESULTS} == 'TYPE02' ]; then
   #---- Create New Jailed User Accounts
   pct exec $CTID -- bash -c "/tmp/${GIT_REPO}/src/ubuntu/pve_nas_ct_addjailuser.sh"
-elif [ ${RESULTS} == TYPE03 ]; then
+elif [ ${RESULTS} == 'TYPE03' ]; then
   #---- Perform a NAS upgrade
   pct exec $CTID -- bash -c "/tmp/${GIT_REPO}/common/pve/tool/pvetool_ct_ubuntu_versionupdater.sh"
-elif [ ${RESULTS} == TYPE04 ]; then
+elif [ ${RESULTS} == 'TYPE04' ]; then
   #---- Install and Configure Fail2ban
   pct exec $CTID -- bash -c "export SSH_PORT=\$(grep Port /etc/ssh/sshd_config | sed '/^#/d' | awk '{ print \$2 }') && /tmp/${GIT_REPO}/common/pve/src/pvesource_ct_ubuntu_installfail2ban.sh"
-elif [ ${RESULTS} == TYPE05 ]; then
+elif [ ${RESULTS} == 'TYPE05' ]; then
   #---- Install and Configure SSMTP Email Alerts
   pct exec $CTID -- bash -c "/tmp/${GIT_REPO}/common/pve/src/pvesource_ct_ubuntu_installssmtp.sh"
-elif [ ${RESULTS} == TYPE06 ]; then
+elif [ ${RESULTS} == 'TYPE06' ]; then
   #---- Install and Configure ProFTPd
   # pct exec $CTID -- bash -c "cp /tmp/pve-nas/src/ubuntu/proftpd_settings/sftp.conf /tmp/common/pve/src/ && /tmp/common/pve/src/pvesource_ct_ubuntu_installproftpd.sh"
   # Check if ProFTPd is installed
@@ -132,7 +132,10 @@ elif [ ${RESULTS} == TYPE06 ]; then
     msg "ProFTPd is already installed..."
   fi
   pct exec $CTID -- bash -c "/tmp/${GIT_REPO}/src/ubuntu/proftpd_settings/pve_nas_ct_proftpdsettings.sh"
-elif [ ${RESULTS} == TYPE07 ]; then
+elif [ ${RESULTS} == 'TYPE07' ]; then
+  #---- Setup ZFS Cache
+  source ${REPO_TEMP}/pve-nas/shared/pve_nas_create_zfs_cacheaddon.sh
+elif [ ${RESULTS} == 'TYPE00' ]; then
   # Exit installation
   msg "You have chosen not to proceed. Aborting. Bye..."
   echo

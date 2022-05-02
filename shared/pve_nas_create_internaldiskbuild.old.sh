@@ -205,7 +205,7 @@ storage_list
 stor_LIST
 
 # Check if any available SATA, NVme disks available
-if [ $(printf '%s\n' "${storLIST[@]}" | awk -F':' -v STOR_MIN=${STOR_MIN} '{size=0.0+$8; if (($5 == "sata" || $5 == "ata" || $5 == "scsi" || $5 == "nvme") && $15 == 0 && ($4 == "zfs_member" || $4 != "zfs_member") && ($9 == "disk" && size >= STOR_MIN || $9 == "part")) { print $0 } }' | wc -l) == 0 ]; then
+if [ $(printf '%s\n' "${storLIST[@]}" | awk -F':' -v STOR_MIN=${STOR_MIN} '{size=0.0+$8; if (($5 == "sata" || $5 == "ata" || $5 == "scsi" || $5 == "nvme") && $15 == 0 && ($9 == "disk" && size >= STOR_MIN || $9 == "part")) { print $0 } }' | wc -l) == 0 ]; then
   msg "We could NOT detect any available SATA disks. New disk(s) might have been wrongly identified as 'system drives' if they contain Linux system or OS partitions. To fix this issue, manually format the disk erasing all data before running this installation again.
   Exiting the installation script. Bye..."
   echo

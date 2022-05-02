@@ -156,7 +156,7 @@ CT_TYPE='veth'
 
 #----[CT_OTHER]
 # OS Version
-CT_OSVERSION='21.04'
+CT_OSVERSION='22.04'
 # CTID numeric ID of the given container.
 CTID='112'
 
@@ -217,60 +217,73 @@ The User can choose between a Proxmox OMV VM or a custom Ubuntu CT NAS solution.
 
 The User choices are:
 
-1)  OMV NAS (PCIe SATA/NVMe) - PCIe SATA/NVMe Card pass-thru
+1)  OMV NAS (PCIe HBA SAS/SATA/NVMe) - PCIe HBA card pass-thru
 
-The PVE host must be installed with a 'dedicated' PCIe HBA SATA/NVMe Card. All NAS disks (including any ZFS Cache SSds) must be connected to this PCIe SATA/NVMe HBA Card. You cannot co-mingle any OMV NAS disks with mainboard SATA/NVMe devices. All storage, both backend and fronted is fully managed by OMV NAS. You also have the option of configuring SSD cache using SSD drives inside OMV NAS. SSD cache will provide High Speed disk I/O.
+Under development. Sorry.
+The PVE host must be installed with a 'dedicated' PCIe HBA SAS/SATA/NVMe Card. All NAS disks (including any Cache SSds) must be connected to this PCIe HBA Card. You cannot co-mingle any OMV NAS disks with mainboard SATA/NVMe devices. All storage, both backend and fronted is fully managed by OpenMediaVault NAS. You have the option of configuring SSD cache using SSD drives inside OMV NAS. SSD cache will provide High Speed disk I/O.
 
-2)  Ubuntu NAS (PVE SATA/NVMe) - PVE ZFS pool backend, Ubuntu frontend
+2)  Ubuntu NAS (PCIe HBA SAS/SATA/NVMe) - PCIe HBA card pass-thru
 
-The NAS ZFS storage pool backend is fully managed by Proxmox. ZFS Raid levels depends on the number of disks installed. You also have the option of configuring ZFS cache using SSD drives. ZFS cache will provide High Speed disk I/O.
+Under development. Sorry.
+The PVE host must be installed with a 'dedicated' PCIe HBA SAS/SATA/NVMe Card. All NAS disks (including any Cache SSds) must be connected to this PCIe HBA Card. You cannot co-mingle any OMV NAS disks with mainboard SATA/NVMe devices. All storage, both backend and fronted is fully managed by OMV NAS. You also have the option of configuring SSD cache using SSD drives inside OMV NAS. SSD cache will provide High Speed disk I/O.
 
-3)  Ubuntu NAS (USB disks) - PVE USB disk backend, Ubuntu frontend
+3)  Ubuntu NAS (PVE LVM/ZFS/Basic) - PVE backend, Ubuntu frontend (including USB)
 
-A USB based NAS is fixed to a single external disk only for SFF computing hardware like Intel NUCs. Your NAS ZFS storage pool backend is fully managed by Proxmox."
+The storage backend is fully managed by Proxmox. A Ubuntu frontend provides file server SMB and NFS, User management, SSH, FTP and permissions. Choose between LVM, ZFS or a  basic single disk file system. LVM and ZFS Raid levels depends on the number of disks installed. You also have the option of configuring LVM and ZFS cache using SSD/NVMe drives. LVM and ZFS cache will provide High Speed disk I/O. An options exists to use a single USB disk."
 echo
 msg "Select the NAS type you want..."
-OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" "TYPE03" "TYPE04" )
-OPTIONS_LABELS_INPUT=( "OpenMediaVault (PCIe SATA/NVMe) - PCIe SATA/NVMe Card pass-thru" \
-"Ubuntu NAS (PVE SATA/NVMe) - PVE ZFS pool backend, Ubuntu frontend" \
-"Ubuntu NAS (USB disks) - PVE USB disk backend, Ubuntu frontend" \
+OPTIONS_VALUES_INPUT=( "TYPE03" "TYPE00" )
+OPTIONS_LABELS_INPUT=( #"OpenMediaVault NAS (PCIe HBA SAS/SATA/NVMe) - PCIe HBA card pass-thru" \
+#"Ubuntu NAS (PCIe HBA SAS/SATA/NVMe) - PCIe HBA card pass-thru" \
+"Ubuntu NAS (PVE LVM/ZFS/Basic) - PVE backend, Ubuntu frontend" \
 "None. Exit this installer" )
 makeselect_input2
 singleselect SELECTED "$OPTIONS_STRING"
 # Set installer type
 TYPE=${RESULTS}
 
+#---- Exit selection
+if [ ${TYPE} == 'TYPE00' ]; then
+  msg "You have chosen not to proceed. Aborting. Bye..."
+  echo
+  exit 0
+fi
+
 
 #---- Setup PVE CT or VM Variables
 if [ ${TYPE} == TYPE01 ]; then
-  # OMV NAS (PCIe SATA/NVMe)
+  # OMV NAS (PCIe SAS/SATA/NVMe)
   warn "Under development. Sorry." && exit 0
 elif [ ${TYPE} == TYPE02 ] || [ ${TYPE} == TYPE03 ]; then
   # VM Type ( 'ct' or 'vm' only lowercase )
   VM_TYPE='ct'
-  # Ubuntu NAS (PVE SATA/NVMe)
+  # Ubuntu NAS (all)
   source ${COMMON_PVE_SRC}/pvesource_set_allvmvars.sh
 fi
 
 
 #---- Prepare disk storage
 if [ ${TYPE} == TYPE01 ]; then
-  # OMV NAS (PCIe SATA/NVMe)
+  # OMV NAS (PCIe SAS/SATA/NVMe)
   warn "Under development. Sorry." && exit 0
 elif [ ${TYPE} == TYPE02 ]; then
-  # Ubuntu NAS (PVE SATA/NVMe)
-  source ${SHARED_DIR}/pve_nas_create_internaldiskbuild.sh
+  # Ubuntu NAS (PCIe HBA SAS/SATA/NVMe)
+  warn "Under development. Sorry." && exit 0
 elif [ ${TYPE} == TYPE03 ]; then
-  # Ubuntu NAS (USB disks)
-  source ${SHARED_DIR}/pve_nas_create_usbdiskbuild.sh
+  # Ubuntu NAS (PVE LVM/ZFS/Basic)
+  source ${SHARED_DIR}/pve_nas_create_storagediskbuild.sh
 fi
 
 
 #---- Create OS CT or VM
 if [ ${TYPE} == TYPE01 ]; then
-  # OMV NAS (PCIe SATA/NVMe)
+  # OMV NAS (PCIe HBA SAS/SATA/NVMe)
   warn "Under development. Sorry." && exit 0
-elif [ ${TYPE} == TYPE02 ] || [ ${TYPE} == TYPE03 ]; then
+elif [ ${TYPE} == TYPE02 ]; then
+  # Ubuntu NAS (PCIe HBA SAS/SATA/NVMe)
+  warn "Under development. Sorry." && exit 0
+elif [ ${TYPE} == TYPE03 ]; then
+  # Ubuntu NAS (PVE LVM/ZFS/Basic)
   #---- Setup PVE CT Variables
   source ${COMMON_PVE_SRC}/pvesource_ct_createvm.sh
 
@@ -279,17 +292,19 @@ elif [ ${TYPE} == TYPE02 ] || [ ${TYPE} == TYPE03 ]; then
   source ${COMMON_PVE_SRC}/pvesource_ct_createbindmounts.sh
 
   # Create LXC Mount Points
-  section "Create NAS CT mount point to ZPool"
+  section "Create NAS CT mount point to host storage pool"
 
   # Add LXC mount points
   if [ -f pvesm_input_list ] && [ $(cat pvesm_input_list | wc -l) -ge 1 ]; then
     msg "Creating NAS CT mount points..."
     i=$(cat pvesm_input_list | wc -l)
-    pct set $CTID -mp${i} /${POOL}/${HOSTNAME},mp=/srv/${HOSTNAME},acl=1 >/dev/null
+    pct set $CTID -mp${i} ${PVE_SRC_MNT},mp=/srv/${HOSTNAME},acl=1 >/dev/null
+    # pct set $CTID -mp${i} /${POOL}/${HOSTNAME},mp=/srv/${HOSTNAME},acl=1 >/dev/null
     info "CT $CTID mount point created: ${YELLOW}/srv/${HOSTNAME}${NC}"
     echo
   else
-    pct set $CTID -mp0 /${POOL}/${HOSTNAME},mp=/srv/${HOSTNAME},acl=1 >/dev/null
+    pct set $CTID -mp0 ${PVE_SRC_MNT},mp=/srv/${HOSTNAME},acl=1 >/dev/null
+    # pct set $CTID -mp0 /${POOL}/${HOSTNAME},mp=/srv/${HOSTNAME},acl=1 >/dev/null
     info "CT $CTID mount point created: ${YELLOW}/srv/${HOSTNAME}${NC}"
     echo
   fi
@@ -308,7 +323,7 @@ if [ ${TYPE} == TYPE02 ] || [ ${TYPE} == TYPE03 ]; then
   printf '%s\n' "${nas_basefolder_extra_LIST[@]}" > nas_basefolderlist_extra
 
   #---- Configure PVE NAS Ubuntu CT 
-  section "Configure PVE NAS Ubuntu CT."
+  section "Configure PVE NAS Ubuntu CT"
 
   # Start container
   msg "Starting NAS CT..."
@@ -347,16 +362,11 @@ if [ ${TYPE} == TYPE02 ] || [ ${TYPE} == TYPE03 ]; then
   #---- Install and Configure SSMTP Email Alerts
   pct exec $CTID -- bash -c "/tmp/pve-nas/common/pve/src/pvesource_ct_ubuntu_installssmtp.sh"
 
-  #---- Install and Configure ProFTPd server
-  # pct exec $CTID -- bash -c "cp /tmp/pve-nas/src/ubuntu/proftpd_settings/sftp.conf /tmp/pve-nas/common/pve/src/ && /tmp/pve-nas/common/pve/src/pvesource_ct_ubuntu_installproftpd.sh"
-    # pct exec $CTID -- bash -c "/tmp/pve-nas/common/pve/src/pvesource_ct_ubuntu_installproftpd.sh && /tmp/pve-nas/src/ubuntu/proftpd_settings/pve_nas_ct_proftpdsettings.sh"
-  pct exec $CTID -- bash -c "/tmp/pve-nas/common/pve/src/pvesource_ct_ubuntu_installproftpd.sh"
+  #---- Create New Power User Accounts
+  # pct exec $CTID -- bash -c "/tmp/pve-nas/src/ubuntu/pve_nas_ct_addpoweruser.sh"
 
   #---- Create New Power User Accounts
-  pct exec $CTID -- bash -c "/tmp/pve-nas/src/ubuntu/pve_nas_ct_addpoweruser.sh"
-
-  #---- Create New Power User Accounts
-  pct exec $CTID -- bash -c "/tmp/pve-nas/src/ubuntu/pve_nas_ct_addjailuser.sh"
+  # pct exec $CTID -- bash -c "/tmp/pve-nas/src/ubuntu/pve_nas_ct_addjailuser.sh"
 fi
 
 #---- Finish Line ------------------------------------------------------------------
@@ -386,7 +396,7 @@ if [ ${TYPE} == 'TYPE02' ] || [ ${TYPE} == 'TYPE03' ]; then
   if [ $(pct exec $CTID -- dpkg -s ssmtp >/dev/null 2>&1; echo $?) == 0 ]; then
     display_msg2+=( "SSMTP Mail Server:installed" )
   else
-    display_msg2+=( "SSMTP Mail Server:not installed" )
+    display_msg2+=( "SSMTP Mail Server:not installed ( A highly recommended installation )" )
   fi
   # Check ProFTPd Status
   if [ $(pct exec $CTID -- dpkg -s proftpd-core >/dev/null 2>&1; echo $?) == 0 ]; then
@@ -396,6 +406,9 @@ if [ ${TYPE} == 'TYPE02' ] || [ ${TYPE} == 'TYPE03' ]; then
   fi
   # Upgrade NAS
   display_msg2+=( "Upgrade NAS OS:OS updates, releases, software packages and patches" )
+
+  # Add ZFS Cache
+  display_msg2+=( "Add ZFS Cache:ARC/L2ARC cache and ZIL log using SSD/NVMe" )
 
   # User Management
   display_msg3+=( "Power User Accounts:For all privatelab, homelab or medialab accounts" )
@@ -410,7 +423,7 @@ if [ ${TYPE} == 'TYPE02' ] || [ ${TYPE} == 'TYPE03' ]; then
   fi
   display_msg4+=( "$x${HOSTNAME}.$(hostname -d)\:" )
 
-  msg_box "${HOSTNAME^^} installation was a success. To manage your new Ubuntu NAS use Webmin (a Linux web management tool). Webmin login credentials are user 'root' and password '${CT_PASSWORD}'. You can change your 'root' password using the Webmin webGUI.\n\n$(printf '%s\n' "${display_msg1[@]}" | indent2)\n\nUse our 'Easy Scripts' toolbox to install add-ons and perform other tasks. More information is available here: https://github.com/ahuacate/pve-nas\n\n$(printf '%s\n' "${display_msg2[@]}" | column -s ":" -t -N "APPLICATION,STATUS" | indent2)\n\nAlso use our 'Easy Scripts' toolbox to create or delete NAS user accounts.\n\n$(printf '%s\n' "${display_msg3[@]}" | column -s ":" -t -N "ACCOUNT TYPE,DESCRIPTION" | indent2)\n\nTo access ${HOSTNAME^^} files use SMB ( Samba ).\n\n$(printf '%s\n' "${display_msg4[@]}" | column -s ":" -t -N "SMB NETWORK ADDRESS" | indent2)\n\n${HOSTNAME^^} will now reboot. NFSv4 is enabled and ready for your PVE hosts."
+  msg_box "${HOSTNAME^^} installation was a success.\n\nTo manage your new Ubuntu NAS use Webmin (a Linux web management tool). Webmin login credentials are user 'root' and password '${CT_PASSWORD}'. You can change your 'root' password using the Webmin webGUI.\n\n$(printf '%s\n' "${display_msg1[@]}" | indent2)\n\nUse our 'Easy Script Toolbox' to install add-ons and perform other tasks. More information is available here: https://github.com/ahuacate/pve-nas\n\n$(printf '%s\n' "${display_msg2[@]}" | column -s ":" -t -N "APPLICATION,STATUS" | indent2)\n\nAlso use our 'Easy Scripts Toolbox' to create or delete NAS user accounts.\n\n$(printf '%s\n' "${display_msg3[@]}" | column -s ":" -t -N "ACCOUNT TYPE,DESCRIPTION" | indent2)\n\nTo access ${HOSTNAME^^} files use SMB.\n\n$(printf '%s\n' "${display_msg4[@]}" | column -s ":" -t -N "SMB NETWORK ADDRESS" | indent2)\n\nNFSv4 is enabled and ready for creating PVE host storage mounts.\n\n${HOSTNAME^^} will now reboot."
 fi
 
 # Cleanup

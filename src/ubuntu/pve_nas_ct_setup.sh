@@ -33,7 +33,7 @@ mv /tmp/nas_basefolderlist_extra .
 #---- Body -------------------------------------------------------------------------
 
 #---- Performing Prerequisites
-section "Performing Prerequisites."
+section "Performing Prerequisites"
 
 # Setting Variables
 msg "Setting the $SECTION_HEAD variables..."
@@ -60,7 +60,7 @@ echo
 
 
 #---- Creating PVE NAS Users and Groups
-section "Creating Users and Groups."
+section "Creating Users and Groups"
 
 # Change Home folder permissions
 msg "Setting default adduser home folder permissions (DIR_MODE)..."
@@ -161,11 +161,23 @@ section "Installing and configuring Webmin."
 
 #---- Install Webmin Prerequisites
 msg "Installing Webmin prerequisites (be patient, might take a while)..."
-apt-get install -y gnupg2 >/dev/null
-bash -c 'echo "deb http://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list' >/dev/null
-wget -qL http://www.webmin.com/jcameron-key.asc
-apt-key add jcameron-key.asc 2>/dev/null
-apt-get update >/dev/null
+# apt-get install -y gnupg2 >/dev/null
+# bash -c 'echo "deb http://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list' >/dev/null
+# wget -qL http://www.webmin.com/jcameron-key.asc
+# apt-key add jcameron-key.asc 2>/dev/null
+# apt-get update >/dev/null
+if (( $(echo "$(lsb_release -sr) >= 22.04" | bc -l) )); then
+  apt-get install -y gnupg2 >/dev/null
+  echo "deb https://download.webmin.com/download/repository sarge contrib" | tee /etc/apt/sources.list.d/webmin.list
+  wget -qO - http://www.webmin.com/jcameron-key.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/jcameron-key.gpg
+  apt-get update >/dev/null
+elif (( $(echo "$(lsb_release -sr) < 22.04" | bc -l) )); then
+  apt-get install -y gnupg2 >/dev/null
+  bash -c 'echo "deb [arch=amd64] http://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list' >/dev/null
+  wget -qL https://download.webmin.com/jcameron-key.asc
+  apt-key add jcameron-key.asc 2>/dev/null
+  apt-get update >/dev/null
+fi
 
 # Install Webmin
 msg "Installing Webmin (be patient, might take a long, long, long while)..."
