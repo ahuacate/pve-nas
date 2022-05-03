@@ -40,7 +40,7 @@ The NAS is a full turnkey installation. After start-up simply add your user acco
 - [x] PVE host hostnames are suffixed with a numeric (*i.e pve-01 or pve01 or pve1*)
 - [x] PVE host has internet access
 
-Note: The network Local Domain or Search domain must be set. We recommend only top-level domain (spTLD) names for residential and small networks names because they cannot be resolved across the internet. Routers and DNS servers know, in theory, not to forward ARPA requests they do not understand onto the public internet. It is best to choose one of our listed names: local, home.arpa, localdomain or lan only. Do NOT use made-up names.
+> Note: The network Local Domain or Search domain must be set. We recommend only top-level domain (spTLD) names for residential and small networks names because they cannot be resolved across the internet. Routers and DNS servers know, in theory, not to forward ARPA requests they do not understand onto the public internet. It is best to choose one of our listed names: local, home.arpa, localdomain or lan only. Do NOT use made-up names.
 
 **Required Prerequisites**
 
@@ -61,15 +61,15 @@ For PVE hosts limited by RAM, less than 16GB, we recommended our Ubuntu-based NA
 <ol>
 <li><h4><b>Ubuntu NAS - PVE SATA/NVMe</b></h4></li>
 
-PVE ZFS pool backend, Ubuntu frontend.
+PVE LVM or ZFS pool backend, Ubuntu frontend.
 
-Proxmox manages the ZFS storage pool backend while Ubuntu does the frontend. ZFS Raid levels depend on the number of disks installed. You also have the option of configuring ZFS cache using SSD drives. ZFS cache will provide High-Speed disk I/O.
+Proxmox manages the LVM or ZFS storage pool backend while Ubuntu does the frontend. LVM and ZFS Raid levels depend on the number of disks installed. You also have the option of configuring ZFS cache using SSD drives. ZFS cache will provide High-Speed disk I/O.
 
 <li><h4><b>Ubuntu NAS - Basic USB disk</b></h4></li>
 
 PVE USB disk backend, Ubuntu frontend.
 
-Here the NAS stores all data on a single external USB disk. This is for SFF computing hardware such as Intel NUCs. Your NAS ZFS storage pool backend is fully managed by the Proxmox host.
+Here the NAS stores all data on a single external USB disk. This is for SFF computing hardware such as Intel NUCs. A basic ext4 storage pool backend is fully managed by the Proxmox host.
 </ol>
 
 The other build option is a NAS OS solution VM.
@@ -88,13 +88,14 @@ Easy Scripts automate the installation and/or configuration processes. Easy Scri
 
 Our Easy Scripts have preset configurations. The installer may accept or decline the ES values. If you decline the User will be prompted to input all required configuration settings. PLEASE read our guide if you are unsure.
 
-
-> Use this script to start the PVE NAS Installer. The User will be prompted to select a installation type. Run in a PVE host SSH terminal.
+<h4><b>1) PVE NAS Builder Easy Script</b></h4>
+Use this script to start the PVE NAS Installer. The User will be prompted to select a installation type. Run in a PVE host SSH terminal.
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/pve_nas_installer.sh)"
 ```
-> PVE Hosted 'Ubuntu NAS' Easy Script Toolbox. For creating and deleting user accounts, installing optional add-ons and upgrading your NAS OS. Run in a PVE host SSH terminal.
+<h4><b>2) PVE Ubuntu NAS Toolbox Easy Script</b></h4>
+For creating and deleting user accounts, installing optional add-ons and upgrading your NAS OS. Run in a PVE host SSH terminal.
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/pve_nas_toolbox.sh)"
@@ -110,8 +111,6 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master
     - [1.2. ZFS SSD Cache](#12-zfs-ssd-cache)
         - [1.2.1. OMV NAS](#121-omv-nas)
         - [1.2.2. Ubuntu NAS](#122-ubuntu-nas)
-            - [1.2.2.1. Partition ZFS Cache Setup -  PVE OS SSD/NVMe](#1221-partition-zfs-cache-setup----pve-os-ssdnvme)
-            - [1.2.2.2. Dedicated ZFS Cache Setup - SSD/NVMe](#1222-dedicated-zfs-cache-setup---ssdnvme)
     - [1.3. NAS ZFS Storage Disks](#13-nas-zfs-storage-disks)
     - [1.4. Installer required Inputs](#14-installer-required-inputs)
         - [1.4.1. A System designated Administrator Email](#141-a-system-designated-administrator-email)
@@ -141,13 +140,13 @@ Your PVE NAS host hardware determines your NAS frontend options.
 
 A ZFS backend depends heavily on RAM, so you need at least 16GB (Recommend 32GB). OMV specifies a minimum of 8GB RAM.
 
-Our Ubuntu NAS CT requires only 512MB RAM because the ZFS backend is managed by the Proxmox host. In practice, install as much RAM you can get for your hardware/budget.
+Our Ubuntu NAS CT requires only 512MB RAM because the LVM or ZFS backend is managed by the Proxmox host. In practice, install as much RAM you can get for your hardware/budget.
 
 ## 1.2. ZFS SSD Cache
 
 ZFS allows for tiered caching of data through the use of memory caches. While ZFS cache is optional we recommend the use of ZFS cache.
 
-With a Ubuntu NAS, cache partitions can be made using PVE host drives or better use dedicated SSD/NVMe disks. ZFS cache will provide High-Speed disk I/O:
+With a Ubuntu NAS, cache partitions can be made using dedicated SSD/NVMe disks. ZFS cache will provide High-Speed disk I/O:
 
 - ZFS Intent Log, or ZIL, to buffer WRITE operations.
 - ARC and L2ARC are meant for READ operations.
@@ -157,15 +156,7 @@ For optimum performance install a dedicated PCIe NVMe HBA Adapter Card dedicated
 
 ### 1.2.2. Ubuntu NAS
 
-Create an SSD/NVMe root drive cache partition or install a dedicated SSD/NVMe disk for ZFS Cache.
-
-#### 1.2.2.1. Partition ZFS Cache Setup -  PVE OS SSD/NVMe 
-
-This is the most cost-effective method of deploying ZFS cache. Instructions are in our [PVE Host Setup](https://github.com/ahuacate/pve-host-setup#121-primary-host---partition-pve-os-ssds-for-zfs-cache---zfs-file-server) guide.
-
-#### 1.2.2.2. Dedicated ZFS Cache Setup - SSD/NVMe
-
-A dedicated ZFS cache SSD setup is the more costly method with no net performance gain. Instructions are in our [PVE Host Setup](https://github.com/ahuacate/pve-host-setup#122-primary-host---partition-dedicated-zfs-cache-ssd---zfs-file-server) guide.
+Install a dedicated SSD/NVMe disk for ZFS Cache. A maximum of 2 devices is recommended. Use our NAS Toolbox to configure ZFS Cache devices.
 
 ## 1.3. NAS ZFS Storage Disks
 
@@ -326,6 +317,7 @@ User options include:
 2. Install & Configure Fail2ban
 3. Install & Configure a SSMTP server
 4. Install & Configure ProFTPd server
+5. Add ZFS Cache - create ARC/L2ARC/ZIL cache with dedicated SSD/NVMe drives
 
 > Run the following Easy Script and select the task you want to perform.
 
