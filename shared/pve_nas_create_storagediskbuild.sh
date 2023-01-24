@@ -207,7 +207,7 @@ function storage_list() {
       var15='1'
     elif [[ ${dev} =~ ^/dev/mapper/(pve-root|pve-data.*|pve-vm.*|pve-swap.*) ]]; then
       var15='1'
-    elif [ $var14 == 'pve' ]; then
+    elif [ "$var14" == 'pve' ]; then
       var15='1'
     else
       var15='0'

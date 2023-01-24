@@ -5,12 +5,12 @@
 # ----------------------------------------------------------------------------------
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-COMMON_PVE_SRC="${DIR}/../../../common/pve/src"
+COMMON_PVE_SRC_DIR="${DIR}/../../../common/pve/src"
 
 #---- Dependencies -----------------------------------------------------------------
 
 # Run Bash Header
-source ${COMMON_PVE_SRC}/pvesource_bash_defaults.sh
+source ${COMMON_PVE_SRC_DIR}/pvesource_bash_defaults.sh
 
 #---- Static Variables -------------------------------------------------------------
 #---- Other Variables --------------------------------------------------------------

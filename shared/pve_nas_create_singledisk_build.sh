@@ -4,6 +4,7 @@
 # Description:  Source script for building single ext4 disk storage
 # ----------------------------------------------------------------------------------
 
+
 #---- Source -----------------------------------------------------------------------
 #---- Dependencies -----------------------------------------------------------------
 
@@ -19,6 +20,12 @@ elif [[ "$1" =~ 'onboard' ]]; then
   INPUT_TRAN='(sata|ata|scsi|nvme)'
   INPUT_TRAN_ARG='onboard'
 fi
+
+# Install Parted (for partprobe)
+if [ $(dpkg -s parted >/dev/null 2>&1; echo $?) != 0 ]; then
+  apt-get install -y parted > /dev/null
+fi
+
 
 #---- Static Variables -------------------------------------------------------------
 
@@ -120,9 +127,11 @@ while true; do
             info "SGDISK - zapped (destroyed) the GPT data structures on device: ${dev}"
             dd if=/dev/zero of=${dev} count=1 bs=512 conv=notrunc 2>/dev/null
             info "DD - cleaned & wiped device: ${dev}"
-            wipefs --all --force ${dev}  >/dev/null 2>&1
+            wipefs --all --force ${dev} >/dev/null 2>&1
             info "wipefs - wiped device: ${dev}"
           done < <( printf '%s\n' "${inputdevLIST[@]}" | grep 'sd[a-z]$\|nvme[0-9]n[0-9]$' ) # file listing of disks to erase
+          sleep 1
+          partprobe
           storage_list # Update storage list array
           stor_LIST # Create a working list array
           echo

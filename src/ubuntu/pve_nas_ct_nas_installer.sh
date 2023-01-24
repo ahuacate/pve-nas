@@ -1,49 +1,40 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------------------------------
-# Filename:     pve_nas_ct_create.sh
-# Description:  This script is for creating a PVE based NAS
+# Filename:     pve_nas_ct_ubuntu_installer.sh
+# Description:  This script is for creating a PVE Ubuntu based NAS
 # ----------------------------------------------------------------------------------
 
 #---- Bash command to run script ---------------------------------------------------
 
-#bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/src/pve_nas_create.sh)"
+#---- Source Github
+# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/pve_nas_installer.sh)"
+
+#---- Source local Git
+# /mnt/pve/nas-01-git/ahuacate/pve-nas/pve_nas_installer.sh
 
 #---- Source -----------------------------------------------------------------------
-
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-COMMON_DIR="${DIR}/../common"
-COMMON_PVE_SRC="${DIR}/../common/pve/src"
-SHARED_DIR="${DIR}/../shared"
-
 #---- Dependencies -----------------------------------------------------------------
 
-# Check for Internet connectivity
-if nc -zw1 google.com 443; then
-  echo
-else
-  echo "Checking for internet connectivity..."
-  echo -e "Internet connectivity status: \033[0;31mDown\033[0m\n\nCannot proceed without a internet connection.\nFix your PVE hosts internet connection and try again..."
-  echo
-  exit 0
-fi
-
-# Run Bash Header
-source ${COMMON_PVE_SRC}/pvesource_bash_defaults.sh
+# Check SMTP Status
+check_smtp_status
 
 #---- Static Variables -------------------------------------------------------------
 
 # Easy Script Section Head
-SECTION_HEAD='PVE NAS'
+SECTION_HEAD='PVE Ubuntu NAS'
 
 # PVE host IP
 PVE_HOST_IP=$(hostname -i)
 PVE_HOSTNAME=$(hostname)
 
 # SSHd Status (0 is enabled, 1 is disabled)
-SSH_ENABLE=0
+SSH_ENABLE=1
 
-# Developer enable git mounts inside CT (0 is enabled, 1 is disabled)
+# Developer enable git mounts inside CT  (0 is enabled, 1 is disabled)
 DEV_GIT_MOUNT_ENABLE=1
+
+# Set file source (path/filename) of preset variables for 'pvesource_ct_createvm.sh'
+PRESET_VAR_SRC="$( dirname "${BASH_SOURCE[0]}" )/$( basename "${BASH_SOURCE[0]}" )"
 
 #---- Other Variables --------------------------------------------------------------
 
@@ -161,17 +152,15 @@ CT_OSVERSION='22.04'
 CTID='112'
 
 
-#---- Repo variables
-# Git server
-GIT_SERVER='https://github.com'
-# Git user
-GIT_USER='ahuacate'
-# Git repository
-GIT_REPO='pve-nas'
-# Git branch
-GIT_BRANCH='master'
-# Git common
-GIT_COMMON='0'
+#----[App_UID_GUID]
+# App user
+APP_USERNAME='root'
+# App user group
+APP_GRPNAME='root'
+
+#----[REPO_PKG_NAME]
+# Repo package name
+REPO_PKG_NAME='pve-nas'
 
 #---- Other Files ------------------------------------------------------------------
 
@@ -186,28 +175,43 @@ done << EOF
 # backup:CT settings backup storage
 EOF
 
-# Required Temporary Files
-# touch zpool_harddisk_disklist zpool_ssd_disklist
-
 #---- Functions --------------------------------------------------------------------
-
-# # PCT list
-# function pct_list() {
-#   pct list | perl -lne '
-#   if ($. == 1) {
-#       @head = ( /(\S+\s*)/g );
-#       pop @head;
-#       $patt = "^";
-#       $patt .= "(.{" . length($_) . "})" for @head;
-#       $patt .= "(.*)\$";
-#   }
-#   print join ",", map {s/"/""/g; s/\s+$//; qq($_)} (/$patt/o);'
-# }
-
 #---- Body -------------------------------------------------------------------------
 
 #---- Introduction
-source ${COMMON_PVE_SRC}/pvesource_ct_intro.sh
+source ${COMMON_PVE_SRC_DIR}/pvesource_ct_intro.sh
+
+#---- Check SMTP status
+if [ "${SMTP_STATUS}" == 0 ]; then
+  # Options if SMTP is inactive
+  display_msg='Before proceeding with this installer we RECOMMEND you first configure all PVE hosts to support SMTP email services. A working SMTP server emails the NAS System Administrator all new User login credentials, SSH keys, application specific login credentials and written guidelines. A PVE host SMTP server makes NAS administration much easier. Also be alerted about unwarranted login attempts and other system critical alerts. PVE Host SMTP Server installer is available in our PVE Host Toolbox located at GitHub:\n\n    --  https://github.com/ahuacate/pve-host'
+
+  msg_box "#### PLEASE READ CAREFULLY ####\n\n$(echo ${display_msg})"
+  echo
+  msg "Select your options..."
+  OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" "TYPE00" )
+  OPTIONS_LABELS_INPUT=( "Agree - Install PVE host SMTP email support" \
+  "Decline - Proceed without SMTP email support" \
+  "None. Exit this installer" )
+  makeselect_input2
+  singleselect SELECTED "$OPTIONS_STRING"
+
+  if [ ${RESULTS} == 'TYPE01' ]; then
+    # Exit and install SMTP
+    msg "Go to our Github site and run our PVE Host Toolbox selecting our 'SMTP Email Setup' option:\n\n  --  https://github.com/ahuacate/pve-host\n\nRe-run the NAS installer after your have configured '$(hostname)' SMTP email support. Bye..."
+    echo
+    exit 0
+  elif [ ${RESULTS} == 'TYPE02' ]; then
+    # Proceed without SMTP email support
+    msg "You have chosen to proceed without SMTP email support. You can always manually configure Postfix SMTP services at a later stage."
+    echo
+  elif [ ${RESULTS} == 'TYPE00' ]; then
+    msg "You have chosen not to proceed. Aborting. Bye..."
+    echo
+    exit 0
+  fi
+fi
+
 
 #---- Select NAS installation type
 section "Select a NAS Solution"
@@ -217,24 +221,18 @@ The User can choose between a Proxmox OMV VM or a custom Ubuntu CT NAS solution.
 
 The User choices are:
 
-1)  OMV NAS (PCIe HBA SAS/SATA/NVMe) - PCIe HBA card pass-thru
-
-Under development. Sorry.
-The PVE host must be installed with a 'dedicated' PCIe HBA SAS/SATA/NVMe Card. All NAS disks (including any Cache SSds) must be connected to this PCIe HBA Card. You cannot co-mingle any OMV NAS disks with mainboard SATA/NVMe devices. All storage, both backend and fronted is fully managed by OpenMediaVault NAS. You have the option of configuring SSD cache using SSD drives inside OMV NAS. SSD cache will provide High Speed disk I/O.
-
-2)  Ubuntu NAS (PCIe HBA SAS/SATA/NVMe) - PCIe HBA card pass-thru
+1)  Ubuntu NAS (PCIe HBA SAS/SATA/NVMe) - PCIe HBA card pass-thru
 
 Under development. Sorry.
 The PVE host must be installed with a 'dedicated' PCIe HBA SAS/SATA/NVMe Card. All NAS disks (including any Cache SSds) must be connected to this PCIe HBA Card. You cannot co-mingle any OMV NAS disks with mainboard SATA/NVMe devices. All storage, both backend and fronted is fully managed by OMV NAS. You also have the option of configuring SSD cache using SSD drives inside OMV NAS. SSD cache will provide High Speed disk I/O.
 
-3)  Ubuntu NAS (PVE LVM/ZFS/Basic) - PVE backend, Ubuntu frontend (including USB)
+2)  Ubuntu NAS (PVE LVM/ZFS/Basic) - PVE backend, Ubuntu frontend (including USB)
 
 The storage backend is fully managed by Proxmox. A Ubuntu frontend provides file server SMB and NFS, User management, SSH, FTP and permissions. Choose between LVM, ZFS or a  basic single disk file system. LVM and ZFS Raid levels depends on the number of disks installed. You also have the option of configuring LVM and ZFS cache using SSD/NVMe drives. LVM and ZFS cache will provide High Speed disk I/O. An options exists to use a single USB disk."
 echo
 msg "Select the NAS type you want..."
-OPTIONS_VALUES_INPUT=( "TYPE03" "TYPE00" )
-OPTIONS_LABELS_INPUT=( #"OpenMediaVault NAS (PCIe HBA SAS/SATA/NVMe) - PCIe HBA card pass-thru" \
-#"Ubuntu NAS (PCIe HBA SAS/SATA/NVMe) - PCIe HBA card pass-thru" \
+OPTIONS_VALUES_INPUT=( "TYPE01" "TYPE02" "TYPE00" )
+OPTIONS_LABELS_INPUT=( "Ubuntu NAS (PCIe HBA SAS/SATA/NVMe) - PCIe HBA card pass-thru: Not available" \
 "Ubuntu NAS (PVE LVM/ZFS/Basic) - PVE backend, Ubuntu frontend" \
 "None. Exit this installer" )
 makeselect_input2
@@ -243,7 +241,11 @@ singleselect SELECTED "$OPTIONS_STRING"
 TYPE=${RESULTS}
 
 #---- Exit selection
-if [ ${TYPE} == 'TYPE00' ]; then
+if [ ${TYPE} == 'TYPE01' ]; then
+  msg "Sorry. Your selected option is not available. Try again. Bye..."
+  echo
+  return
+elif [ ${TYPE} == 'TYPE00' ]; then
   msg "You have chosen not to proceed. Aborting. Bye..."
   echo
   exit 0
@@ -252,24 +254,21 @@ fi
 
 #---- Setup PVE CT or VM Variables
 if [ ${TYPE} == TYPE01 ]; then
-  # OMV NAS (PCIe SAS/SATA/NVMe)
+  # Ubuntu NAS (PCIe HBA SAS/SATA/NVMe)
   warn "Under development. Sorry." && exit 0
-elif [ ${TYPE} == TYPE02 ] || [ ${TYPE} == TYPE03 ]; then
+elif [ ${TYPE} == TYPE02 ]; then
   # VM Type ( 'ct' or 'vm' only lowercase )
   VM_TYPE='ct'
   # Ubuntu NAS (all)
-  source ${COMMON_PVE_SRC}/pvesource_set_allvmvars.sh
+  source ${COMMON_PVE_SRC_DIR}/pvesource_set_allvmvars.sh
 fi
 
 
 #---- Prepare disk storage
 if [ ${TYPE} == TYPE01 ]; then
-  # OMV NAS (PCIe SAS/SATA/NVMe)
-  warn "Under development. Sorry." && exit 0
-elif [ ${TYPE} == TYPE02 ]; then
   # Ubuntu NAS (PCIe HBA SAS/SATA/NVMe)
   warn "Under development. Sorry." && exit 0
-elif [ ${TYPE} == TYPE03 ]; then
+elif [ ${TYPE} == TYPE02 ]; then
   # Ubuntu NAS (PVE LVM/ZFS/Basic)
   source ${SHARED_DIR}/pve_nas_create_storagediskbuild.sh
 fi
@@ -277,19 +276,16 @@ fi
 
 #---- Create OS CT or VM
 if [ ${TYPE} == TYPE01 ]; then
-  # OMV NAS (PCIe HBA SAS/SATA/NVMe)
-  warn "Under development. Sorry." && exit 0
-elif [ ${TYPE} == TYPE02 ]; then
   # Ubuntu NAS (PCIe HBA SAS/SATA/NVMe)
   warn "Under development. Sorry." && exit 0
-elif [ ${TYPE} == TYPE03 ]; then
+elif [ ${TYPE} == TYPE02 ]; then
   # Ubuntu NAS (PVE LVM/ZFS/Basic)
   #---- Setup PVE CT Variables
-  source ${COMMON_PVE_SRC}/pvesource_ct_createvm.sh
+  source ${COMMON_PVE_SRC_DIR}/pvesource_ct_createvm.sh
 
   #---- Pre-Configuring PVE CT
   # Create CT Bind Mounts
-  source ${COMMON_PVE_SRC}/pvesource_ct_createbindmounts.sh
+  source ${COMMON_PVE_SRC_DIR}/pvesource_ct_createbindmounts.sh
 
   # Create LXC Mount Points
   section "Create NAS CT mount point to host storage pool"
@@ -310,13 +306,25 @@ elif [ ${TYPE} == TYPE03 ]; then
   fi
 
   #---- Configure New CT OS
-  source ${COMMON_PVE_SRC}/pvesource_ct_ubuntubasics.sh
+  source ${COMMON_PVE_SRC_DIR}/pvesource_ct_ubuntubasics.sh
 fi
 
-#---- Build PVE CT
-if [ ${TYPE} == TYPE02 ] || [ ${TYPE} == TYPE03 ]; then
+
+#---- PVE NAS ----------------------------------------------------------------------
+
+#---- PVE NAS build
+if [ ${TYPE} == TYPE01 ] || [ ${TYPE} == TYPE02 ]; then
+  # Set DIR Schema ( PVE host or CT mkdir )
+  if [ $(uname -a | grep -Ei --color=never '.*pve*' &> /dev/null; echo $?) == 0 ]; then
+    DIR_SCHEMA="${PVE_SRC_MNT}"
+    # DIR_SCHEMA="/${POOL}/${HOSTNAME}"
+  else
+    # Select or input a storage path ( set DIR_SCHEMA )
+    source ${COMMON_DIR}/nas/src/nas_identify_storagepath.sh
+  fi
+
   #---- Create default base and sub folders
-  source ${SHARED_DIR}/nas_basefoldersetup.sh
+  source ${COMMON_DIR}/nas/src/nas_basefoldersetup.sh
   # Create temporary files of lists
   printf "%s\n" "${nas_subfolder_LIST[@]}" > nas_basefoldersubfolderlist
   printf '%s\n' "${nas_basefolder_LIST[@]}" > nas_basefolderlist
@@ -339,6 +347,8 @@ if [ ${TYPE} == TYPE02 ] || [ ${TYPE} == TYPE03 ]; then
   "SSH_PORT='${SSH_PORT}'" \
   "PVE_HOST_IP='${PVE_HOST_IP}'" \
   "DIR_SCHEMA='/srv/${HOSTNAME}'" \
+  "GIT_REPO='${GIT_REPO}'" \
+  "APP_NAME='${APP_NAME}'" \
   "PVE_HOSTNAME='${PVE_HOSTNAME}'" > ${TEMP_DIR}/pve_nas_ct_variables.sh
   pct push $CTID ${TEMP_DIR}/pve_nas_ct_variables.sh /tmp/pve_nas_ct_variables.sh -perms 755
   # Share folder lists
@@ -353,83 +363,65 @@ if [ ${TYPE} == TYPE02 ] || [ ${TYPE} == TYPE03 ]; then
   echo
 
   #---- Start NAS setup script
-  # pct exec $CTID -- bash -c "/tmp/pve_nas_ct_variables.sh && /tmp/pve-nas/src/ubuntu/pve_nas_ct_setup.sh"
-  pct exec $CTID -- bash -c "/tmp/pve-nas/src/ubuntu/pve_nas_ct_setup.sh"
+  pct exec $CTID -- bash -c "/tmp/pve-nas/src/ubuntu/pve-nas_sw.sh"
 
   #---- Install and Configure Fail2ban
   pct exec $CTID -- bash -c "export SSH_PORT=\$(grep Port /etc/ssh/sshd_config | sed '/^#/d' | awk '{ print \$2 }') && /tmp/pve-nas/common/pve/src/pvesource_ct_ubuntu_installfail2ban.sh"
 
   #---- Install and Configure SSMTP Email Alerts
-  pct exec $CTID -- bash -c "/tmp/pve-nas/common/pve/src/pvesource_ct_ubuntu_installssmtp.sh"
-
-  #---- Create New Power User Accounts
-  # pct exec $CTID -- bash -c "/tmp/pve-nas/src/ubuntu/pve_nas_ct_addpoweruser.sh"
-
-  #---- Create New Power User Accounts
-  # pct exec $CTID -- bash -c "/tmp/pve-nas/src/ubuntu/pve_nas_ct_addjailuser.sh"
+  source ${COMMON_PVE_SRC_DIR}/pvesource_install_postfix_client.sh
 fi
 
 #---- Finish Line ------------------------------------------------------------------
-if [ ${TYPE} == 'TYPE02' ] || [ ${TYPE} == 'TYPE03' ]; then
-  section "Completion Status."
+if [ ${TYPE} == 'TYPE01' ] || [ ${TYPE} == 'TYPE02' ]; then
+  section "Completion Status"
+
+  # Get port
+  port=10000
+  # Interface
+  interface=$(pct exec $CTID -- ip route ls | grep default | grep -Po '(?<=dev )(\S+)')
+  # Get IP type
+  if [[ $(pct exec $CTID -- ip addr show ${interface} | grep -q dynamic > /dev/null; echo $?) == 0 ]]; then # ip -4 addr show eth0 
+      ip_type='dhcp - best use dhcp IP reservation'
+  else
+      ip_type='static IP'
+  fi
 
   #---- Set display text
-  unset display_msg1
-  unset display_msg2
-  unset display_msg3
-  unset display_msg4
   # Webmin access URL
-  if [ -n "${IP}" ] && [ ! ${IP} == 'dhcp' ]; then
-    display_msg1+=( "https://${IP}:10000/" )
-  elif [ -n "${IP6}" ] && [ ! ${IP6} == 'dhcp' ]; then
-    display_msg1+=( "https://${IP6}:10000/" )
-  fi
-  display_msg1+=( "https://${HOSTNAME}.$(hostname -d):10000/" )
-
+  display_msg1=( "https://$(pct exec $CTID -- hostname).$(pct exec $CTID -- hostname -d):${port}/" )
+  display_msg1+=( "https://$(pct exec $CTID -- hostname -I | sed -r 's/\s+//g'):${port}/ (${ip_type})" )
   # Check Fail2ban Status
   if [ $(pct exec $CTID -- dpkg -s fail2ban >/dev/null 2>&1; echo $?) == 0 ]; then
-    display_msg2+=( "Fail2ban SW:installed" )
+    display_msg2=( "Fail2ban SW:installed" )
   else
-    display_msg2+=( "Fail2ban SW:not installed" )
+    display_msg2=( "Fail2ban SW:not installed" )
   fi
-  # Check SSMTP Mailserver Status
-  if [ $(pct exec $CTID -- dpkg -s ssmtp >/dev/null 2>&1; echo $?) == 0 ]; then
-    display_msg2+=( "SSMTP Mail Server:installed" )
+  # Check SMTP Mailserver Status
+  if [ "$(pct exec $CTID -- bash -c 'if [ -f /etc/postfix/main.cf ]; then grep --color=never -Po "^ahuacate_smtp=\K.*" "/etc/postfix/main.cf" || true; else echo 0; fi')" == '1' ]; then
+    display_msg2+=( "SMTP Mail Server:installed" )
   else
-    display_msg2+=( "SSMTP Mail Server:not installed ( A highly recommended installation )" )
+    display_msg2+=( "SMTP Mail Server:not installed ( recommended install )" )
   fi
   # Check ProFTPd Status
-  if [ $(pct exec $CTID -- dpkg -s proftpd-core >/dev/null 2>&1; echo $?) == 0 ]; then
+  if [ "$(pct exec $CTID -- dpkg -s proftpd-core >/dev/null 2>&1; echo $?)" == '0' ]; then
     display_msg2+=( "ProFTPd Server:installed" )
   else
     display_msg2+=( "ProFTPd Server:not installed" )
   fi
   # Upgrade NAS
   display_msg2+=( "Upgrade NAS OS:OS updates, releases, software packages and patches" )
-
   # Add ZFS Cache
   display_msg2+=( "Add ZFS Cache:ARC/L2ARC cache and ZIL log using SSD/NVMe" )
-
   # User Management
-  display_msg3+=( "Power User Accounts:For all privatelab, homelab or medialab accounts" )
+  display_msg3=( "Power User Accounts:For all privatelab, homelab or medialab accounts" )
   display_msg3+=( "Jailed User Accounts:For all jailed and restricted user accounts" )
-
   # File server login
   x='\\\\'
-  if [ -n "${IP}" ] && [ ! ${IP} == 'dhcp' ]; then
-    display_msg4+=( "$x${IP}\:" )
-  elif [ -n "${IP6}" ] && [ ! ${IP6} == 'dhcp' ]; then
-    display_msg4+=( "$x${IP6}\:" )
-  fi
-  display_msg4+=( "$x${HOSTNAME}.$(hostname -d)\:" )
+  display_msg4=( "$x${HOSTNAME}.$(hostname -d)\:" )
+  display_msg4+=( "$x$(pct exec $CTID -- hostname -I | sed -r 's/\s+//g')\: (${ip_type})" )
 
-  msg_box "${HOSTNAME^^} installation was a success.\n\nTo manage your new Ubuntu NAS use Webmin (a Linux web management tool). Webmin login credentials are user 'root' and password '${CT_PASSWORD}'. You can change your 'root' password using the Webmin webGUI.\n\n$(printf '%s\n' "${display_msg1[@]}" | indent2)\n\nUse our 'Easy Script Toolbox' to install add-ons and perform other tasks. More information is available here: https://github.com/ahuacate/pve-nas\n\n$(printf '%s\n' "${display_msg2[@]}" | column -s ":" -t -N "APPLICATION,STATUS" | indent2)\n\nAlso use our 'Easy Scripts Toolbox' to create or delete NAS user accounts.\n\n$(printf '%s\n' "${display_msg3[@]}" | column -s ":" -t -N "ACCOUNT TYPE,DESCRIPTION" | indent2)\n\nTo access ${HOSTNAME^^} files use SMB.\n\n$(printf '%s\n' "${display_msg4[@]}" | column -s ":" -t -N "SMB NETWORK ADDRESS" | indent2)\n\nNFSv4 is enabled and ready for creating PVE host storage mounts.\n\n${HOSTNAME^^} will now reboot."
+  # Display msg
+  msg_box "${HOSTNAME^^} installation was a success.\n\nTo manage your new Ubuntu NAS use Webmin (a Linux web management tool). Webmin login credentials are user 'root' and password '${CT_PASSWORD}'. You can change your 'root' password using the Webmin WebGUI.\n\n$(printf '%s\n' "${display_msg1[@]}" | indent2)\n\nUse our 'Easy Script Toolbox' to install add-ons and perform other tasks. More information is available here: https://github.com/ahuacate/pve-nas\n\n$(printf '%s\n' "${display_msg2[@]}" | column -s ":" -t -N "APPLICATION,STATUS" | indent2)\n\nAlso use our 'Easy Scripts Toolbox' to create or delete NAS user accounts.\n\n$(printf '%s\n' "${display_msg3[@]}" | column -s ":" -t -N "USER ACCOUNT TYPE,DESCRIPTION" | indent2)\n\nTo access ${HOSTNAME^^} files use SMB.\n\n$(printf '%s\n' "${display_msg4[@]}" | column -s ":" -t -N "SMB NETWORK ADDRESS" | indent2)\n\nNFSv4 is enabled and ready for creating PVE host storage mounts.\n\n${HOSTNAME^^} will now reboot."
 fi
-
-# Cleanup
-pct exec $CTID -- bash -c "rm -R /tmp/pve-nas &> /dev/null; rm /tmp/pve-nas.tar.gz &> /dev/null"
-pct reboot $CTID
-rm -R /tmp/pve-nas &> /dev/null
-rm /tmp/pve-nas.tar.gz &> /dev/null
-
-trap cleanup EXIT
+#-----------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------------------------------
-# Filename:     pve_nas_ct_setup.sh
+# Filename:     pve-nas_sw.sh
 # Description:  Setup for Ubuntu NAS server
 # ----------------------------------------------------------------------------------
 
@@ -9,13 +9,13 @@
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 COMMON_DIR="${DIR}/../../common"
-COMMON_PVE_SRC="${DIR}/../../common/pve/src"
+COMMON_PVE_SRC_DIR="${DIR}/../../common/pve/src"
 SHARED_DIR="${DIR}/../../shared"
 
 #---- Dependencies -----------------------------------------------------------------
 
 # Run Bash Header
-source ${COMMON_PVE_SRC}/pvesource_bash_defaults.sh
+source ${COMMON_PVE_SRC_DIR}/pvesource_bash_defaults.sh
 
 #---- Static Variables -------------------------------------------------------------
 #---- Other Variables --------------------------------------------------------------
@@ -32,7 +32,7 @@ mv /tmp/nas_basefolderlist_extra .
 
 #---- Body -------------------------------------------------------------------------
 
-#---- Performing Prerequisites
+#---- Prerequisites
 section "Performing Prerequisites"
 
 # Setting Variables
@@ -64,69 +64,31 @@ section "Creating Users and Groups"
 
 # Change Home folder permissions
 msg "Setting default adduser home folder permissions (DIR_MODE)..."
-sed -i "s/DIR_MODE=.*/DIR_MODE=0750/g" /etc/adduser.conf
+sed -i "s/^DIR_MODE=.*/DIR_MODE=0750/g" /etc/adduser.conf
 info "Default adduser permissions set: ${WHITE}0750${NC}"
 msg "Setting default HOME folder destination..."
-sed -i "s/DHOME=.*/DHOME=\/srv\/$HOSTNAME\/homes/g" /etc/adduser.conf
-sed -i "s/# HOME=.*/HOME=\/srv\/$HOSTNAME\/homes/g" /etc/default/useradd
+sed -i "s|^DHOME=.*|DHOME=${DIR_SCHEMA}/homes|g" /etc/adduser.conf
+sed -i "s|^# HOME=.*|HOME=${DIR_SCHEMA}/homes|g" /etc/default/useradd
 echo "HOME_MODE 0750" | sudo tee -a /etc/login.defs
-info "Default HOME destination folder set: ${WHITE}/srv/$HOSTNAME/homes${NC}"
+info "Default HOME destination folder set: ${WHITE}${DIR_SCHEMA}/homes${NC}"
 
-# Create users and groups
-msg "Creating CT default user groups..."
-# Create Groups
-if [ $(egrep -i "^medialab" /etc/group >/dev/null; echo $?) != 0 ]; then
-  groupadd -g 65605 medialab > /dev/null
-  info "Default user group created: ${YELLOW}medialab${NC}"
-fi
-if [ $(egrep -i "^homelab" /etc/group >/dev/null; echo $?) -ne 0 ]; then
-  groupadd -g 65606 homelab > /dev/null
-  info "Default user group created: ${YELLOW}homelab${NC}"
-fi
-if [ $(egrep -i "^privatelab" /etc/group >/dev/null; echo $?) -ne 0 ]; then
-  groupadd -g 65607 privatelab > /dev/null
-  info "Default user group created: ${YELLOW}privatelab${NC}"
-fi
-if [ $(egrep -i "^chrootjail" /etc/group >/dev/null; echo $?) -ne 0 ]; then
-  groupadd -g 65608 chrootjail > /dev/null
-  info "Default user group created: ${YELLOW}chrootjail${NC}"
-fi
-echo
-
-# Create Base User Accounts
-msg "Creating CT default users..."
-mkdir -p /srv/$HOSTNAME/homes >/dev/null
-chgrp -R root /srv/$HOSTNAME/homes >/dev/null
-chmod -R 0755 /srv/$HOSTNAME/homes >/dev/null
-if [ $(id -u media &>/dev/null; echo $?) = 1 ]; then
-  useradd -m -d /srv/$HOSTNAME/homes/media -u 1605 -g medialab -s /bin/bash media >/dev/null
-  chmod 0700 /srv/$HOSTNAME/homes/media
-  info "Default user created: ${YELLOW}media${NC} of group medialab"
-fi
-if [ $(id -u home &>/dev/null; echo $?) = 1 ]; then
-  useradd -m -d /srv/$HOSTNAME/homes/home -u 1606 -g homelab -G medialab -s /bin/bash home >/dev/null
-  chmod 0700 /srv/$HOSTNAME/homes/home
-  info "Default user created: ${YELLOW}home${NC} of groups medialab, homelab"
-fi
-if [ $(id -u private &>/dev/null; echo $?) = 1 ]; then
-  useradd -m -d /srv/$HOSTNAME/homes/private -u 1607 -g privatelab -G medialab,homelab -s /bin/bash private >/dev/null
-  chmod 0700 /srv/$HOSTNAME/homes/private
-  info "Default user created: ${YELLOW}private${NC} of groups medialab, homelab and privatelab"
-fi
-echo
+# Create User Acc
+# Set base dir
+DIR_SCHEMA="/srv/$(hostname)"
+source ${COMMON_DIR}/nas/src/nas_create_users.sh
 
 # Creating Chroot jail environment
-export PARENT_EXEC=0 >/dev/null
-source ${COMMON_PVE_SRC}/pvesource_ct_ubuntu_installchroot.sh
-SECTION_HEAD='PVE NAS'
+# export PARENT_EXEC=0 >/dev/null
+source ${COMMON_PVE_SRC_DIR}/pvesource_ct_ubuntu_installchroot.sh
+# SECTION_HEAD='PVE NAS'
 
 #---- Validating your network setup
 
 # Run Check Host IP
-# source ${SHARED_DIR}/nas_set_nasip.sh
+# source ${COMMON_DIR}/nas/src/nas_set_nasip.sh
 
 # Identify PVE host IP
-source ${COMMON_PVE_SRC}/pvesource_identify_pvehosts.sh
+source ${COMMON_PVE_SRC_DIR}/pvesource_identify_pvehosts.sh
 
 # Modifying SSHd
 cat <<EOF >> /etc/ssh/sshd_config
@@ -148,16 +110,15 @@ EOF
 
 
 #---- Install and Configure Samba
-source ${SHARED_DIR}/nas_installsamba.sh
+source ${COMMON_DIR}/nas/src/nas_installsamba.sh
 
 
 #---- Install and Configure NFS
-source ${SHARED_DIR}/nas_installnfs.sh
+source ${COMMON_DIR}/nas/src/nas_installnfs.sh
 
 
 #---- Install and Configure Webmin
 section "Installing and configuring Webmin."
-
 
 #---- Install Webmin Prerequisites
 msg "Installing Webmin prerequisites (be patient, might take a while)..."
@@ -190,3 +151,4 @@ elif [ "$(systemctl is-active --quiet webmin; echo $?) -eq 3" ]; then
 	info "Webmin Server status: ${RED}inactive (dead).${NC}. Your intervention is required."
 	echo
 fi
+#-----------------------------------------------------------------------------------

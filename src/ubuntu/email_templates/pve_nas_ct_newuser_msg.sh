@@ -8,21 +8,30 @@
 #---- Dependencies -----------------------------------------------------------------
 #---- Static Variables -------------------------------------------------------------
 
-# Check for Remote WAN Address status
-if  [ $(cat /etc/proftpd/conf.d/global_default.conf | grep '^#\s*SFTP_REMOTE_WAN_ADDRESS=*' | awk -F'=' '{ print $2}') = 1 ]; then
+if [ -f /etc/proftpd/conf.d/global_default.conf ]; then
+  # Check for Remote WAN Address status
+  if  [ "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_ADDRESS=*' | awk -F'=' '{ print $2}')" == 1 ]; then
     SFTP_REMOTE_WAN_ADDRESS='Not available'
-elif [ $(cat /etc/proftpd/conf.d/global_default.conf | grep '^#\s*SFTP_REMOTE_WAN_ADDRESS=*' | awk -F'=' '{ print $2}') != 1 ]; then
+  elif [ "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_ADDRESS=*' | awk -F'=' '{ print $2}')" != 1 ]; then
     SFTP_REMOTE_WAN_ADDRESS=$(cat /etc/proftpd/conf.d/global_default.conf | grep '^#\s*SFTP_REMOTE_WAN_ADDRESS=*' | awk -F'=' '{ print $2 }' |  sed 's/^[ \t]*//;s/[ \t]*$//')
-fi
-# Check for Remote Port Address status
-if  [ $(cat /etc/proftpd/conf.d/global_default.conf | grep '^#\s*SFTP_REMOTE_WAN_PORT=*' | awk -F'=' '{ print $2}') = 1 ]; then
+  fi
+  # Check for Remote Port Address status
+  if  [ "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_PORT=*' | awk -F'=' '{ print $2}')" == 1 ]; then
     SFTP_REMOTE_WAN_PORT='Not available'
-elif [ $(cat /etc/proftpd/conf.d/global_default.conf | grep '^#\s*SFTP_REMOTE_WAN_PORT=*' | awk -F'=' '{ print $2}') != 1 ]; then
+  elif [ "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_PORT=*' | awk -F'=' '{ print $2}')" != 1 ]; then
     SFTP_REMOTE_WAN_PORT=$(cat /etc/proftpd/conf.d/global_default.conf | grep '^#\s*SFTP_REMOTE_WAN_PORT=*' | awk -F'=' '{ print $2 }' |  sed 's/^[ \t]*//;s/[ \t]*$//')
+  fi
+else
+  SFTP_REMOTE_WAN_ADDRESS='Not available'
+  SFTP_REMOTE_WAN_PORT='Not available'
 fi
 
 # Check SFTP LAN Port
-LOCAL_LAN_PORT=$(cat /etc/proftpd/conf.d/sftp.conf | grep '^\s*Port.*[0-9]$' |  sed 's/^[ \t]*//;s/[ \t]*$//' | awk -F' ' '{ print $2}')
+if [ -f /etc/proftpd/conf.d/sftp.conf ]; then
+  LOCAL_LAN_PORT=$(cat /etc/proftpd/conf.d/sftp.conf 2> /dev/null | grep '^\s*Port.*[0-9]$' |  sed 's/^[ \t]*//;s/[ \t]*$//' | awk -F' ' '{ print $2}')
+else
+  LOCAL_LAN_PORT='Not available'
+fi
 
 #---- Other Variables --------------------------------------------------------------
 #---- Other Files ------------------------------------------------------------------
@@ -31,8 +40,8 @@ LOCAL_LAN_PORT=$(cat /etc/proftpd/conf.d/sftp.conf | grep '^\s*Port.*[0-9]$' |  
 #---- Email user credentials
 # Email body text
 cat <<-EOF > email_body.html
-To: $(grep -r "root=.*" /etc/ssmtp/ssmtp.conf | grep -v "#" | sed -e 's/root=//g')
-From: donotreply@${HOSTNAME}_server.local
+To: ${PVE_ROOT_EMAIL}
+From: donotreply@${HOSTNAME}.local
 Subject: Login Credentials for NAS user: ${USER}
 Mime-Version: 1.0
 Content-Type: multipart/mixed; boundary="ahuacate"
@@ -50,7 +59,7 @@ Content-Type: text/html
 <li><strong>Supplementary User Group</strong> : $(if [ ${GROUP} == chrootjail ]; then echo "None"; else echo -e ${USERMOD} | sed 's/^...//' | sed 's/,/, /'; fi)</li>
 <li><strong>Private SSH Key (Standard)</strong> : id_${USER,,}_ed25519</li>
 <li><strong>Private SSH Key (PPK version)</strong> : id_${USER,,}_ed25519.ppk</li>
-<li><strong>NAS LAN IP Address</strong> : $(hostname -i)</li>
+<li><strong>NAS LAN IP Address</strong> : $(hostname -I)</li>
 <li><strong>NAS WAN Address</strong> : ${SFTP_REMOTE_WAN_ADDRESS}</li>
 <li><strong>SMB Status</strong> : Enabled</li>
 </ul>
@@ -88,20 +97,22 @@ fi)
 <p>SMB, or Server Message Block, is the method used by Microsoft Windows networking, and with the Samba protocol on Apple Mac and Linux/Unix.</p>
 <p>1) MS Window Clients</p>
 <ul style="list-style-type: square;">
-<li><strong>Server address</strong> : \\\\$(hostname -i)</li>
+<li><strong>Server IP address</strong> : \\\\$(hostname -I)</li>
+<li><strong>Server FQDN address</strong> : \\\\$(hostname).$(hostname -d)</li>
 <li><strong>User name</strong> : ${USER}</li>
 <li><strong>Password</strong> : ${PASSWORD}</li>
 </ul>
 <p>2) Apple Mac or Linux Clients</p>
 <ul style="list-style-type: square;">
-<li><strong>Server address</strong> : smb://$(hostname -i)</li>
+<li><strong>Server IP address</strong> : smb://$(hostname -I)</li>
+<li><strong>Server FQDN address</strong> : smb://$(hostname).$(hostname -d)</li>
 <li><strong>Connect as</strong> : Registered User</li>
 <li><strong>Name</strong> : ${USER}</li>
 <li><strong>Password</strong> : ${PASSWORD}</li>
 </ul>
 
 <h3>---- Client SFTP ${HOSTNAME^} connection</h3>
-<p>Only SFTP is enabled (standard FTP connections are denied) with a login type by SSH key only. For connecting we recommend the free Filezilla FTP client software ( https://filezilla-project.org/download.php ). Use the Filezilla connection tool 'File' &gt; 'Site Manager' and create a 'New Site' account with the following credentials.</p>
+<p>Only SFTP is enabled (standard FTP connections are denied) with a login type by SSH key only. For connecting we recommend the free FileZilla FTP client software ( https://filezilla-project.org/download.php ). Use the FileZilla connection tool 'File' &gt; 'Site Manager' and create a 'New Site' account with the following credentials.</p>
 <ul style="list-style-type: square;">
 <li><strong>Protocol</strong> : SFTP - SSH File Transfer Protocol</li>
 <li><strong>Login Type</strong> : Key file</li>
@@ -111,7 +122,8 @@ fi)
 <p>Depending on your account type you can select either a local and/or remote SFTP connection method.</p>
 <p>1) LAN Access - For LAN access only.</p>
 <ul style="list-style-type: square;">
-<li><strong>Host address</strong> : $(hostname -i)</li>
+<li><strong>Host IP address</strong> : $(hostname -I)</li>
+<li><strong>Host FQDN address</strong> : $(hostname).$(hostname -d)</li>
 <li><strong>Port</strong> : ${LOCAL_LAN_PORT}</li>
 </ul>
 <div>2) WAN Access - For remote internet access only.</div>

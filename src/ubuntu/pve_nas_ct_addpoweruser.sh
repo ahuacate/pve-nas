@@ -7,17 +7,17 @@
 #---- Bash command to run script ---------------------------------------------------
 
 # Command to run script
-# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/src/ubuntu/pve_nas_ct_addpoweruser.sh)"
+# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/src/ubuntu/pve_nas_ct_addpoweruser.sh)"
 
 #---- Source -----------------------------------------------------------------------
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-COMMON_PVE_SRC="${DIR}/../../common/pve/src"
+COMMON_PVE_SRC_DIR="${DIR}/../../common/pve/src"
 
 #---- Dependencies -----------------------------------------------------------------
 
 # Run Bash Header
-source ${COMMON_PVE_SRC}/pvesource_bash_defaults.sh
+source ${COMMON_PVE_SRC_DIR}/pvesource_bash_defaults.sh
 
 # Install libcrack2
 if [ $(dpkg -s libcrack2 >/dev/null 2>&1; echo $?) != 0 ]; then
@@ -31,12 +31,10 @@ if [ $(id -u) != 0 ]; then
   exit 0
 fi
 
-# Check SSMTP Server Status
-if [ $(pct exec $CTID -- dpkg -s ssmtp >/dev/null 2>&1; echo $?) == 0 ]; then
-  SSMTP_STATUS='0'
-else
-  SSMTP_STATUS='1'
-  display_msg='\nBefore proceeding with this installer we RECOMMEND you first install our SSMTP server package. A working SSMTP server emails the NAS System Administrator all new User login credentials, SSH keys, application specific login credentials and written guidelines. A SSMTP server makes NAS administration much easier. Also be alerted about unwarranted login attempts and other system critical alerts. SSMTP Server installer is available in our NAS Toolbox.\n\n    --  SSMTP Mail Server status: not installed\n'
+# Check PVE host SMTP status
+check_smtp_status
+if [ "${SMTP_STATUS}" == 0 ]; then
+  display_msg='\nBefore proceeding with this installer we RECOMMEND you first configure all PVE hosts to support SMTP email services. A working SMTP server emails the NAS System Administrator all new User login credentials, SSH keys, application specific login credentials and written guidelines. A PVE host SMTP server makes NAS administration much easier. Also be alerted about unwarranted login attempts and other system critical alerts. PVE Host SMTP Server installer is available in our PVE Host Toolbox located at GitHub:\n\n    --  https://github.com/ahuacate/pve-host\n'
 fi
 
 #---- Static Variables -------------------------------------------------------------
@@ -159,7 +157,7 @@ section "Create a New Power User Account"
 
 echo
 msg_box "#### PLEASE READ CAREFULLY - CREATING POWER USER ACCOUNTS ####
-$(if [ ${SSMTP_STATUS} == '1' ]; then echo ${display_msg}; fi)
+$(if [ "${SMTP_STATUS}" == '0' ]; then echo -e ${display_msg}; fi)
 Power Users are trusted persons with privileged access to data and application resources hosted on your PVE NAS. Power Users are NOT standard users! Standard users are added at a later stage. Each new Power Users security permissions are controlled by Linux groups. Group security permission levels are as follows:
 
   --  GROUP NAME    -- PERMISSIONS
@@ -359,7 +357,7 @@ if [ ${TYPE} == TYPE01 ]; then
     done <<< $( cat ${NEW_USERS} )
 
     #---- Email User SSH Keys
-    if [ $(dpkg -s ssmtp >/dev/null 2>&1; echo $?) = 0 ] && [ $(grep -qs "^root:*" /etc/ssmtp/revaliases >/dev/null; echo $?) = 0 ]; then
+    if [ "${SMTP_STATUS}" == '1' ]; then
       section "Email User Credentials & SSH keys"
       echo
       msg_box "#### PLEASE READ CAREFULLY - EMAIL NEW USER CREDENTIALS ####\n
@@ -383,7 +381,7 @@ if [ ${TYPE} == TYPE01 ]; then
           [Yy]*)
             while read USER PASSWORD GROUP USERMOD; do
               source ${DIR}/email_templates/pve_nas_ct_newuser_msg.sh
-              msg "Sending '${USER}' credentials and ssh key package to $(grep -r "root=.*" /etc/ssmtp/ssmtp.conf | grep -v "#" | sed -e 's/root=//g')..."
+              msg "Sending '${USER}' credentials and ssh key package to '${PVE_ROOT_EMAIL}'..."
               sendmail -t < email_body.html
               info "Email sent. Check your system administrators inbox."
             done <<< $( cat ${NEW_USERS} )

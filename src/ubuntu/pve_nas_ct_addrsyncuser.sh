@@ -77,15 +77,15 @@
 
 # # Download external scripts
 # if [ ! -f $TEMP_DIR/pve_zfs_nas_base_folder_setup ];then
-#   wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_base_folder_setup
+#   wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/maain/scripts/pve_zfs_nas_base_folder_setup
 # fi
 # if [ ! -f $TEMP_DIR/pve_zfs_nas_base_subfolder_setup ];then
-#   wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_zfs_nas_base_subfolder_setup
+#   wget -qL https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/maain/scripts/pve_zfs_nas_base_subfolder_setup
 # fi
 
 
 # # Command to run script
-# # bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/master/scripts/pve_nfs_nas_add_rsyncuser_ct.sh)"
+# # bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-zfs-nas/maain/scripts/pve_nfs_nas_add_rsyncuser_ct.sh)"
 
 
 # # Setting Variables

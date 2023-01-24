@@ -7,17 +7,17 @@
 #---- Bash command to run script ---------------------------------------------------
 
 # Command to run script
-# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/master/src/ubuntu/pve_nas_ct_addjailuser.sh)"
+# bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/src/ubuntu/pve_nas_ct_addjailuser.sh)"
 
 #---- Source -----------------------------------------------------------------------
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-COMMON_PVE_SRC="${DIR}/../../common/pve/src"
+COMMON_PVE_SRC_DIR="${DIR}/../../common/pve/src"
 
 #---- Dependencies -----------------------------------------------------------------
 
 # Run Bash Header
-source ${COMMON_PVE_SRC}/pvesource_bash_defaults.sh
+source ${COMMON_PVE_SRC_DIR}/pvesource_bash_defaults.sh
 
 # Install libcrack2
 if [ $(dpkg -s libcrack2 >/dev/null 2>&1; echo $?) != 0 ]; then
@@ -31,12 +31,10 @@ if [ $(id -u) != 0 ]; then
   exit 0
 fi
 
-# Check SSMTP Server Status
-if [ $(pct exec $CTID -- dpkg -s ssmtp >/dev/null 2>&1; echo $?) == 0 ]; then
-  SSMTP_STATUS='0'
-else
-  SSMTP_STATUS='1'
-  display_msg='\nBefore proceeding with this installer we RECOMMEND you first install our SSMTP server package. A working SSMTP server emails the NAS System Administrator all new User login credentials, SSH keys, application specific login credentials and written guidelines. A SSMTP server makes NAS administration much easier. Also be alerted about unwarranted login attempts and other system critical alerts. SSMTP Server installer is available in our NAS Toolbox.\n\n    --  SSMTP Mail Server status: not installed\n'
+# Check PVE host SMTP status
+check_smtp_status
+if [ "${SMTP_STATUS}" == 0 ]; then
+  display_msg='\nBefore proceeding with this installer we RECOMMEND you first configure all PVE hosts to support SMTP email services. A working SMTP server emails the NAS System Administrator all new User login credentials, SSH keys, application specific login credentials and written guidelines. A PVE host SMTP server makes NAS administration much easier. Also be alerted about unwarranted login attempts and other system critical alerts. PVE Host SMTP Server installer is available in our PVE Host Toolbox located at GitHub:\n\n    --  https://github.com/ahuacate/pve-host\n'
 fi
 
 #---- Static Variables -------------------------------------------------------------
@@ -190,7 +188,7 @@ function delete_jailed_username() {
 section "Create a Restricted and Jailed User Account"
 echo
 msg_box "#### PLEASE READ CAREFULLY - RESTRICTED & JAILED USER ACCOUNTS ####\n
-$(if [ ${SSMTP_STATUS} == '1' ]; then echo ${display_msg}; fi)
+$(if [ "${SMTP_STATUS}" == '0' ]; then echo -e ${display_msg}; fi)
 Every new user is restricted or jailed within their own home folder. In Linux this is called a chroot jail. But you can select the level of restrictions which are applied to each newly created user. This technique can be quite useful if you want a particular user to be provided with a limited system environment, limited folder access and at the same time keep them separate from your main server system and other personal data.
 
 The chroot technique will automatically jail selected users belonging to the 'chrootjail' user group upon ssh or sftp login.
@@ -846,7 +844,7 @@ if [ ${TYPE} == TYPE01 ]; then
     done <<< $( cat ${NEW_USERS} )
 
     #---- Email User SSH Keys
-    if [ $(dpkg -s ssmtp >/dev/null 2>&1; echo $?) == '0' ] && [ $(grep -qs "^root:*" /etc/ssmtp/revaliases >/dev/null; echo $?) == '0' ]; then
+    if [ "${SMTP_STATUS}" == '1' ]; then
       section "$SECTION_HEAD - Email User Credentials & SSH keys"
       echo
       msg_box "#### PLEASE READ CAREFULLY - EMAIL NEW USER CREDENTIALS ####\n
@@ -868,7 +866,7 @@ if [ ${TYPE} == TYPE01 ]; then
           [Yy]*)
             while read USER PASSWORD GROUP JAIL_TYPE; do
               source ${DIR}/email_templates/pve_nas_ct_newuser_msg.sh
-              msg "Sending '${USER}' credentials and ssh key package to $(grep -r "root=.*" /etc/ssmtp/ssmtp.conf | grep -v "#" | sed -e 's/root=//g')..."
+              msg "Sending '${USER}' credentials and ssh key package to '${PVE_ROOT_EMAIL}'..."
               sendmail -t < email_body.html
               info "Email sent. Check your system administrators inbox."
             done <<< $( cat ${NEW_USERS} )
