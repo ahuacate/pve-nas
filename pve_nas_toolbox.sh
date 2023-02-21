@@ -79,7 +79,7 @@ then
   source $REPO_PATH/common/bash/src/pve_repo_loader.sh
 else
   # Download Github loader
-  wget -qL - https://raw.githubusercontent.com/${GIT_USER/common/main/bash/src/pve_repo_loader.sh -O $REPO_TEMP/pve_repo_loader.sh
+  wget -qL - https://raw.githubusercontent.com/$GIT_USER/common/main/bash/src/pve_repo_loader.sh -O $REPO_TEMP/pve_repo_loader.sh
   chmod +x $REPO_TEMP/pve_repo_loader.sh
   source $REPO_TEMP/pve_repo_loader.sh
 fi
@@ -87,5 +87,5 @@ fi
 #---- Body -------------------------------------------------------------------------
 
 #---- Run Installer
-source $REPO_PATH/common/bash/src/pve_repo_toolbox_main.sh
+source $REPO_PATH/$GIT_REPO/common/bash/src/pve_repo_toolbox_main.sh
 #-----------------------------------------------------------------------------------

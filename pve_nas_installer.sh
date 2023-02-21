@@ -98,6 +98,6 @@ fi
 #---- Body -------------------------------------------------------------------------
 
 #---- Run Installer
-source $REPO_PATH/common/bash/src/pve_repo_installer_main.sh
+source $REPO_PATH/$GIT_REPO/common/bash/src/pve_repo_installer_main.sh
 
 #-----------------------------------------------------------------------------------
