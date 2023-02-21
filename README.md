@@ -1,33 +1,29 @@
 <h1>PVE File Server (NAS)</h1>
 
-A PVE File Server is a fully functional NAS using a Proxmox CT or VM.
+**Lightweight - Ubuntu NAS (CT)**
+A lightweight NAS built on a CT using only 512Mb RAM. Ubuntu OS and Webmin WebGui frontend.
 
-**PVE LXC/CT NAS**
-Our CT-based NAS uses a Ubuntu CT requiring only 512Mb of RAM. Proxmox provides the NAS with backend storage space based on a LVM or ZFS file system using SATA/NVMe disks. Raid options are available.
+Backend storage is by Proxmox. Choose between LVM or ZFS Raid or a basic single disk ext4 file system. A USB disk-based NAS is also supported.
 
-A basic single USB disk NAS is also available. The USB file system is ext4.
-
-**PVE VM NAS**
-Our VM-based NAS is built on Open Media Vault (OMV) and requires direct attached storage or PCI SAS/SATA/NVMe HBA Card pass-through. Our default file system is EXT4 or BTRFS using MergerFS and SnapRaid.
+**Heavyweight - OMV NAS (VM)**
+Open Media Vault (OMV) NAS built in a Proxmox VM. Requires direct attached storage or PCI SAS/SATA/NVMe HBA Card pass-through. Our default file system is EXT4 or BTRFS using MergerFS and SnapRaid.
 
 <h2>Features</h2>
 
-All NAS builds are configured to be ready to support Ahuacate suite of applications. Each NAS type install includes:
+All NAS builds support our suite of application CTs and VMs. Each NAS type install includes:
 
 * Power User & Group Accounts
     * Groups: medialab:65605, homelab:65606, privatelab:65607, chrootjail:65608
     * Users: media:1605, home:1606, private:1607
-    * Users media, home and private are for running CT applications
+    * Users media, home and private are our default CT App users
 * Chrootjail Group for general User accounts
-* Ready for all Medialab applications such as Sonarr, Radarr, JellyFin, NZBGet and more
+* Support all Medialab file permissions required by Sonarr, Radarr, JellyFin, NZBGet and more
 * Full set of base and sub-folders ready for all CT applications
 * Folder and user permissions are set including ACLs
-* NFS 4.0 exports ready for PVE hosts backend storage mounts
+* NFS 4.0 exports ready for PVE host's backend storage mounts
 * SMB 3.0 shares with access permissions set ( by User Group accounts )
 * Setting Local Domain option( i.e .local, .localdomain, .home.arpa, .lan )
 * Easy Script Toolbox to create or delete User accounts, perform OS upgrades and install add-on services (i.e SSMTP, ProFTP and ZFS Cache)
-
-The NAS is a full turnkey installation.
 
 <h2>Prerequisites</h2>
 
@@ -62,36 +58,36 @@ Your network Local Domain or Search domain must be also set. We recommend only t
 
 <h2>Installation Options</h2>
 
-If you want a dedicated hard-metal NAS ( not Proxmox hosted ) look at this GitHub [repository](https://github.com/ahuacate/nas-hardmetal). There is an Easy Script to fully configure a Synology v7 or OMV NAS appliance.
-
-For PVE hosts limited by RAM, less than 16GB, we recommended our Ubuntu-based NAS builds. This requires only 512MB RAM and runs on a lightweight PVE CT.
+Our lightweight NAS is for PVE hosts limited by RAM.
 <ol>
 <li><h4><b>Ubuntu NAS CT - PVE SATA/NVMe</b></h4></li>
 
-LVM or ZFS filesystem backend, Ubuntu frontend.
+LVM or ZFS backend filesystem, Ubuntu frontend.
 
-Proxmox manages an LVM or ZFS filesystem backend while Ubuntu does the frontend. LVM and ZFS Raid levels depend on the number of disks installed. You also have the option of configuring ZFS cache using SSD/NVMe drives. ZFS cache will provide High-Speed disk I/O.
+LVM and ZFS Raid levels depend on the number of disks installed. You also have the option of configuring ZFS cache using SSD/NVMe drives. ZFS cache is for High-Speed disk I/O.
 
 <li><h4><b>Ubuntu NAS CT - Basic USB disk</b></h4></li>
 
 USB disk ext4 backend, Ubuntu frontend.
 
-All data is stored on a single external USB disk. This is for SFF computing hardware such as Intel NUCs. A basic ext4 storage pool backend is fully managed by the Proxmox host.
+All data is stored on a single external USB disk. A basic ext4 file system backend is managed by your Proxmox host.
 </ol>
 
-Another build option is our OMV NAS solutions built in a VM. If you have adequate RAM (32Gb) and want a user-friendly NAS WebGUI interface we recommend you install OMV.
+Another build option is our OMV NAS. If you have adequate RAM (32Gb or more) and want a user-friendly NAS WebGUI interface we recommend you install OMV.
 
 <ol>
 <li><h4><b>OMV NAS VM - Direct attached storage</b><h/4></li>
 
+**Physical Disk pass-through**
+Physical disks are configured to pass through to the VM as SCSI devices. You can configure as many disks as you like. This is a cost-effective solution because you can use native SATA ports on your PVE hosts' mainboard. OMV manages both the backend and front end. Requires PVE host bootloader kernel config file edits shown [here](https://pve.proxmox.com/wiki/Pci_passthrough#Introduction) before installing.
+
 **PCIe SAS/SATA/NVMe HBA Card**
 PCIe SAS/SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i) pass-through will likely deliver superior NAS performance.
 
-A dedicated PCIe SAS/SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i) is required for all NAS storage disks. All OMV storage disks, including any LVM/ZFS Cache SSDs, must be connected to the HBA Adapter Card. You cannot co-mingle OMV disks with the PVE host's mainboard onboard SATA/NVMe devices. OMV manages both the backend and front end.
-
-**Physical Disk pass-through**
-Here whole physical disks are configured to pass through to the VM as SCSI devices. You can configure as many disks as you like. This is a cost-effective solution because you can use native SATA ports on your PVE hosts' mainboard. OMV manages both the backend and front end.
+A dedicated PCIe SAS/SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i) is required for all NAS storage disks. All OMV storage disks, including any LVM/ZFS Cache SSDs, must be connected to the HBA Adapter Card. You cannot co-mingle OMV disks with the PVE host's mainboard onboard SATA/NVMe devices. OMV manages both the backend and front end. Requires PVE host bootloader kernel config file edits shown [here](https://pve.proxmox.com/wiki/Pci_passthrough#Introduction) before installing.
 </ol>
+
+For a dedicated hard-metal NAS, not Proxmox hosted, go to this GitHub [repository](https://github.com/ahuacate/nas-hardmetal). Options include between Easy Scripts to configure a Synology v7 or OMV NAS appliance.
 
 <h4><b>Easy Scripts</b></h4>
 
@@ -99,8 +95,8 @@ Easy Scripts automate the installation and/or configuration processes. Easy Scri
 
 Our Easy Scripts have preset configurations. The installer may accept or decline the ES values. If you decline the User will be prompted to input all required configuration settings. PLEASE read our guide if you are unsure.
 
-<h4><b>1) PVE NAS Builder Easy Script</b></h4>
-Use this script to start the PVE NAS Installer for all PVE NAS types. The User will be prompted to select an installation type (i.e Ubuntu, USB,OMV). Run in a PVE host SSH terminal.
+<h4><b>1) PVE NAS Installer Easy Script</b></h4>
+Use this script to start the PVE NAS installer for all PVE NAS types. The User will be prompted to select an installation type (i.e Ubuntu, USB, OMV). Run in a PVE host SSH terminal.
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/pve_nas_installer.sh)"
@@ -131,7 +127,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/p
         - [3.2.1. ZFS storage](#321-zfs-storage)
             - [3.2.1.1. ZFS Cache support](#3211-zfs-cache-support)
         - [3.2.2. LVM storage](#322-lvm-storage)
-    - [5.2. Easy Script Toolbox options](#52-easy-script-toolbox-options)
+    - [3.3. Easy Script Toolbox options](#33-easy-script-toolbox-options)
 - [4. Preparation & General requirements](#4-preparation--general-requirements)
     - [4.1. Required Installer Inputs](#41-required-installer-inputs)
     - [4.2. A System designated Administrator Email](#42-a-system-designated-administrator-email)
@@ -153,7 +149,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/p
 
 # 1. Introduction
 
-When selecting your NAS type to build you have the option of PVE backend or direct attached storage (PCIe HBA card or disk pass through).
+When selecting your NAS type to build you have the option of PVE backend or direct attached storage (PCIe HBA card or disk pass-through).
 
 ## 1.1. Backend storage - PVE Ubuntu NAS
 
@@ -169,17 +165,17 @@ Choose ZFS Raid, LVM Raid or basic single-disk storage for your NAS build. Your 
 ## 1.3. PVE RAM recommendations
 A Ubuntu NAS CT requires only 512MB RAM because the LVM or ZFS backend storage is managed by the Proxmox host. In practice, install as much RAM as you can get for your hardware/budget.
 
-A ZFS backend depends heavily on RAM, so you need at least 16GB (Recommend 32GB).
+A ZFS backend depends heavily on RAM, so you need at least 16GB (32GB recommended).
 
 OMV specifies a minimum of 8GB RAM.
 
 <hr>
 
 # 2. OMV NAS VM
-Prepare your PVE host with a PCIe SAS/SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i) or use Direct Attached storage. Connect all the storage and parity disks. Make a note of the device IDs (i.e /dev/sda).
+Prepare your PVE host with a PCIe SAS/SATA/NVMe HBA Adapter Card (i.e LSI 9207-8i) or use Direct Attached Storage (requires [IOMMU enabled](https://pve.proxmox.com/wiki/Pci_passthrough)). Connect all the storage and parity disks. Make a note of the device IDs (i.e /dev/sda).
 
 ## 2.1. Create the OMV NAS VM
-Use this script to start the PVE NAS Installer. The User will be prompted to select an installation type. Select `Omv Nas - OMV based NAS`. Run in a PVE host SSH terminal.
+Use this script to start the PVE NAS Installer. You will be prompted to select an installation type. Select `Omv Nas - OMV based NAS`. Run in a PVE host SSH terminal.
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/pve_nas_installer.sh)"
@@ -201,7 +197,7 @@ After creating your OMV VM go to our detailed [configuration guide](https://gith
 Prepare all new disks by wiping them. You can also re-connect to an existing Ubuntu NAS storage backend.
 
 ## 3.1. Create the Ubuntu NAS CT
-Use this script to start the PVE NAS Installer. The User will be prompted to select an installation type. Select `Ubuntu Nas - Ubuntu CT based NAS`. Run in a PVE host SSH terminal.
+Use this script to start the PVE NAS Installer. The User will be prompted to select an installation type. Select `Ubuntu Nas - Ubuntu CT based NAS`. Run in your PVE host SSH terminal.
 
 ```bash
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/pve_nas_installer.sh)"
@@ -211,7 +207,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/p
 
 The User can choose to create a new file system or re-connect to an existing file system. 
 
-The installer script allows for the re-connection to a previous prepared storage volume. Supported filesystems are LVM, ZFS and USB ext4 storage.
+The installer script allows for the re-connection to a previously prepared storage volume. Supported filesystems are LVM, ZFS and USB ext4 storage.
 
 ### 3.2.1. ZFS storage
 
@@ -256,12 +252,14 @@ The Ubuntu NAS Easy Script has the option to use the following LVM Raid builds:
 
 Remember, our Easy Script will destroy all existing data on these storage hard disks!
 
-## 5.2. Easy Script Toolbox options
+## 3.3. Easy Script Toolbox options
+
 Once you have completed your Ubuntu NAS installation you can perform administration tasks using our Easy Script Toolbox.
 
 Tasks include:
 
 * Create user accounts
+* Delete user accounts
 * Upgrade your NAS OS
 * Install options:
     * Fail2Ban
@@ -278,14 +276,13 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/p
 
 <hr>
 
-
 # 4. Preparation & General requirements
 
 Get your hardware in order before running a NAS build script.
 
 ## 4.1. Required Installer Inputs
 
-Our Easy Script requires the User to provide some inputs. The installer will be given default values to use or the option to input your own values.
+Our Easy Script requires the User to provide some inputs. The installer will be given default values to use or the option to input your values.
 
 We recommend you prepare the following and have your credentials ready before running our NAS build scripts.
 
@@ -297,7 +294,7 @@ You need a designated administrator email address. All server alerts and activit
 
 Before proceeding with this installer we recommend you first configure all PVE hosts to support SMTP email services. A working SMTP server emails the NAS System Administrator all-new User login credentials, SSH keys, application-specific login credentials and written guidelines.
 
-A PVE host SMTP server makes NAS administration much easier. Also be alerted about unwarranted login attempts and other system critical alerts. PVE Host SMTP Server installer is available in our PVE Host Toolbox located at GitHub:
+A PVE host SMTP server makes NAS administration much easier. Also, be alerted about unwarranted login attempts and other system critical alerts. PVE Host SMTP Server installer is available in our PVE Host Toolbox located at GitHub:
 * https://github.com/ahuacate/pve-host
 
 We recommend you create an account at [Mailgun](https://mailgun.com) to relay your NAS system emails to your designated administrator. With [Mailgun](https://mailgun.com) you are not potentially exposing your private email server credentials held within a text file on your NAS. This is an added layer of security.
@@ -308,7 +305,7 @@ The default hostname is `nas-01`. Our naming convention stipulates all NAS hostn
 
 ## 4.5. NAS IPv4 Address
 
-By default DHCP IPv4 is enabled. We recommend you use DHCP IP reservation at your DHCP server ( i.e router, PiHole ) to create static IP address to avoid any local DNS lookup issues. You may change to whatever IPv4 or IPv6 address you want. Just note the VLAN ID.
+By default DHCP IPv4 is enabled. We recommend you use DHCP IP reservation at your DHCP server ( i.e router, PiHole ) to create a static IP address to avoid any local DNS lookup issues. You may change to whatever IPv4 or IPv6 address you want. Just note the VLAN ID.
 
 ## 4.6. NAS Search Domain or Local Domain
 
@@ -323,7 +320,7 @@ We recommend top-level domain (spTLD) names for residential and small network na
 * lan
 * localdomain
 
-If you insist on using a made-up search domain name, then DNS requests may go unfulfilled by your router and forwarded onto global internet DNS root servers. This leaks information about your network such as device names. Alternatively, you can use a registered domain name or subdomain if you know what you are doing by selecting the 'Other' option.
+If you insist on using a made-up search domain name, then DNS requests may go unfulfilled by your router and be forwarded onto global internet DNS root servers. This leaks information about your network such as device names. Alternatively, you can use a registered domain name or subdomain if you know what you are doing by selecting the 'Other' option.
 
 ## 4.7. Network VLAN Aware
 

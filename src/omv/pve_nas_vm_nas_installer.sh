@@ -19,18 +19,23 @@
 check_smtp_status
 
 # Set Audio
-if [ -f /proc/asound/cards ]; then
+if [ -f "/proc/asound/cards" ]
+then
   # Set audio device
-  if [[ $(cat /proc/asound/cards | grep -i 'HDA-Intel') ]]; then
+  if [[ $(cat /proc/asound/cards | grep -i 'HDA-Intel') ]]
+  then
     VM_DEVICE_VAR='intel-hda'
     VM_DRIVER_VAR='none'
-  elif [[ $(cat /proc/asound/cards | grep -i 'ICH9\|Intel ICH9') ]]; then
+  elif [[ $(cat /proc/asound/cards | grep -i 'ICH9\|Intel ICH9') ]]
+  then
     VM_DEVICE_VAR='ich9-intel-hda'
     VM_DRIVER_VAR='none'
-  elif [[ $(cat /proc/asound/cards | grep -i 'ac97') ]]; then
+  elif [[ $(cat /proc/asound/cards | grep -i 'ac97') ]]
+  then
     VM_DEVICE_VAR='AC97'
     VM_DRIVER_VAR='none'
-  elif [[ ! $(cat /proc/asound/cards | grep -i 'ICH9\|Intel ICH9') ]]; then
+  elif [[ ! $(cat /proc/asound/cards | grep -i 'ICH9\|Intel ICH9') ]]
+  then
     VM_DEVICE_VAR=''
     VM_DRIVER_VAR=''
   fi
@@ -97,7 +102,7 @@ HWADDR=""
 # Controls whether this interface’s firewall rules should be used.
 FIREWALL='1'
 # VLAN tag for this interface (value 0 for none, or VLAN[2-N] to enable).
-TAG=''
+TAG='0'
 # VLAN ids to pass through the interface
 TRUNKS=""
 # Apply rate limiting to the interface (MB/s). Value "" for unlimited.
@@ -190,9 +195,9 @@ VM_VIDEOSTREAMING='all'
 # Use '0' to disable, '1' to enable to enable ('<0 | 1>:<0 | string name>').
 OPTION_STATUS='0:audio0'
 # Configure a audio device, useful in combination with QXL/Spice. (ich9-intel-hda|intel-hda|AC97)
-VM_DEVICE="${VM_DEVICE_VAR}"
+VM_DEVICE="$VM_DEVICE_VAR"
 # Driver select. (spice|none)
-VM_DRIVER="${VM_DRIVER_VAR}"
+VM_DRIVER="$VM_DRIVER_VAR"
 
 #----[VM_VGA_OPTIONS]
 # Configure the VGA Hardware. Since QEMU 2.9 the default VGA display type is 'std' for all OS types besides older Windows versions (XP and older) which use cirrus.
@@ -208,11 +213,11 @@ VM_VGA_MEMORY='32'
 # Use '0' to disable, '1' to enable to enable ('<0 | 1>:<0 | string name>').
 OPTION_STATUS='1:0'
 # The number of cores per socket. Auto set by script.(default = 1)
-VM_CORES=${CORES}
+VM_CORES=$CORES
 # Limit of CPU usage.
-VM_CPULIMIT="${CPULIMIT}"
+VM_CPULIMIT="$CPULIMIT"
 # CPU weight for a VM. Argument is used in the kernel fair scheduler. The larger the number is, the more CPU time this VM gets.
-VM_CPUUNITS="${CPUUNITS}"
+VM_CPUUNITS="$CPUUNITS"
 # The number of CPU sockets.
 VM_SOCKETS='1'
 # Number of hotplugged vcpus. Default is ''.
@@ -224,7 +229,7 @@ VM_NUMA='0'
 # Use '0' to disable, '1' to enable to enable ('<0 | 1>:<0 | string name>').
 OPTION_STATUS='1:0'
 # Memory. Amount of RAM for the VM in MB. This is the maximum available memory when you use the balloon device. 
-VM_MEMORY=${MEMORY}
+VM_MEMORY="$MEMORY"
 # Amount of target RAM for the VM in MB. Using zero disables the ballon driver. 
 VM_BALLOON='512'
 
@@ -232,21 +237,21 @@ VM_BALLOON='512'
 # Use '0' to disable, '1' to enable to enable ('<0 | 1>:<0 | string name>').
 OPTION_STATUS='1:net0'
 # Network Card Model. The virtio model provides the best performance with very low CPU overhead. Otherwise use e1000. (virtio | e1000) 
-VM_MODEL="${MODEL}"
+VM_MODEL="$MODEL"
 # Bridge to attach the network device to.
-VM_BRIDGE="${BRIDGE}"
+VM_BRIDGE="$BRIDGE"
 # A common MAC address with the I/G (Individual/Group) bit not set. 
-VM_MACADDR="${HWADDR}"
+VM_MACADDR="$HWADDR"
 # Controls whether this interface’s firewall rules should be used.
-VM_FIREWALL="${FIREWALL}"
+VM_FIREWALL="$FIREWALL"
 # VLAN tag for this interface (value 0 for none, or VLAN[2-N] to enable).
-VM_TAG="${TAG}"
+VM_TAG="$TAG"
 # VLAN ids to pass through the interface.
-VM_TRUNKS="${TRUNKS}"
+VM_TRUNKS="$TRUNKS"
 # Apply rate limiting to the interface (MB/s). Value "" for unlimited.
-VM_RATE="${RATE}"
+VM_RATE="$RATE"
 # MTU - Maximum transfer unit of the interface.
-VM_MTU="${MTU}"
+VM_MTU="$MTU"
 
 #----[VM_GUEST_OS_OPTIONS]
 # Use '0' to disable, '1' to enable to enable ('<0 | 1>:<0 | string name>').
@@ -272,7 +277,7 @@ VM_DOWN='1'
 # Use '0' to disable, '1' to enable to enable ('<0 | 1>:<0 | string name>').
 OPTION_STATUS='1:scsi0'
 # Virtual Disk Size (GB).
-VM_SCSI0_SIZE="${VM_SIZE}"
+VM_SCSI0_SIZE="$VM_SIZE"
 # Cache
 VM_SCSI0_CACHE=''
 # Allows the node to reclaim the free space that does not have any data. Must use 'VirtIO SCSI controller'. Enable for ZFS. Set <ignore|on>
@@ -317,9 +322,9 @@ VM_CIPASSWORD='ahuacate'
 # Specifies the cloud-init configuration format. Use the nocloud format for Linux, and configdrive2 for windows.
 VM_CITYPE='nocloud'
 # Sets DNS server IP address for a container.
-VM_NAMESERVER=${NAMESERVER}
+VM_NAMESERVER=$NAMESERVER
 # Sets DNS search domains for a container.
-VM_SEARCHDOMAIN=${SEARCHDOMAIN}
+VM_SEARCHDOMAIN=$SEARCHDOMAIN
 # SSH Keys. Setup public SSH keys (one key per line, OpenSSH format).
 VM_SSHKEYS=''
 
@@ -327,11 +332,11 @@ VM_SSHKEYS=''
 # Use '0' to disable, '1' to enable to enable ('<0 | 1>:<0 | string name>').
 OPTION_STATUS='1:ipconfig0'
 # IP address (IPv4). Set IPv4 or 'dhcp'.
-VM_IP="${IP}"
+VM_IP="$IP"
 # IP address (IPv6). Set IPv6 or 'dhcp'.
 VM_IP6=""
 # Default gateway for traffic (IPv4).
-VM_GW="${GW}"
+VM_GW="$GW"
 # Default gateway for traffic (IPv6).
 VM_GW6=""
 
@@ -396,39 +401,42 @@ EOF
 #---- Prerequisites
 
 # PCI IOMMU passthru
-source ${COMMON_PVE_SRC_DIR}/pvesource_precheck_iommu.sh
+source $COMMON_PVE_SRC_DIR/pvesource_precheck_iommu.sh
 
 # Host SMTP support
-source ${COMMON_PVE_SRC_DIR}/pvesource_precheck_hostsmtp.sh
+source $COMMON_PVE_SRC_DIR/pvesource_precheck_hostsmtp.sh
 
 
 #---- Introduction
-source ${COMMON_PVE_SRC_DIR}/pvesource_vm_intro.sh
+source $COMMON_PVE_SRC_DIR/pvesource_vm_intro.sh
 
 
 #---- Set variables
-source ${COMMON_PVE_SRC_DIR}/pvesource_set_allvmvars.sh
+source $COMMON_PVE_SRC_DIR/pvesource_set_allvmvars.sh
 
 
 #---- Create VM
-source ${COMMON_PVE_SRC_DIR}/pvesource_vm_createvm.sh
+source $COMMON_PVE_SRC_DIR/pvesource_vm_createvm.sh
 
 
 #---- Set PCI HBA or physical disk pass-through
-source ${COMMON_PVE_SRC_DIR}/pvesource_vm_diskpassthru.sh
+source $COMMON_PVE_SRC_DIR/pvesource_vm_diskpassthru.sh "onboard"
 
 
 #---- Finish Line ------------------------------------------------------------------
 section "Completion Status"
 
 #---- Set display text
-if [ "${VM_DISK_PT}" == '0' ]; then
+if [ "$VM_DISK_PT" = 0 ]
+then
   # Aborted disk pass-through
   display_msg1="You have chosen to abort setting disk pass-through for your VM '${HOSTNAME,,}'. No disk pass-through has been configured. We recommend you destroy VM '${VMID} (${HOSTNAME,,})', fix any issue you have with your disks and run the installer again."
-elif [ "${VM_DISK_PT}" == '1' ]; then
+elif [ "$VM_DISK_PT" = 1 ]
+then
   # PCIe Pass-through
   display_msg1="You have chosen to configure your NAS with PCIe HBA card pass-through. Steps to be taken are:\n\n    --  Connect your NAS disks to your SATA/SAS/NVMe PCIe HBA card\n    --  Follow the steps in our guide: https://github.com/ahuacate/nas-hardmetal\n\nAfter configuring your PCIe HBA card pass-through using the PVE web interface on PVE host '$(hostname)', go to VM '${VMID} (${HOSTNAME,,})' > '_Shell' and start the VM. The OMV installation frontend WebGUI will start. Complete the OMV installation as per our Github guide:\n\n    --  https://github.com/ahuacate/nas-hardmetal\n\nAfter completing the OMV installation your login credentials are:\n\n    Web interface\n    --  URL: http://${HOSTNAME,,}.$(hostname -d) (hostname.domain)\n    --  User: admin\n    --  Password: openmediavault\n\n    Client (SSH, console)\n    --  User: root\n    --  Password: The password that you have set during installation."
-elif [ "${VM_DISK_PT}" == '2' ]; then
+elif [ "$VM_DISK_PT" = 2 ]
+then
   # PCIe Pass-through
   display_msg1="Using the PVE web interface on PVE host '$(hostname)', go to VM '${VMID} (${HOSTNAME,,})' > '_Shell' and start the VM. The OMV installation frontend WebGUI will start. Complete the OMV installation as per our Github guide:\n\n    --  https://github.com/ahuacate/nas-hardmetal\n\nAfter completing the OMV installation your login credentials are:\n\n    Web interface\n    --  URL: http://${HOSTNAME,,}.$(hostname -d) (hostname.domain)\n    --  User: admin\n    --  Password: openmediavault\n\n    Client (SSH, console)\n    --  User: root\n    --  Password: The password that you have set during installation."
 fi

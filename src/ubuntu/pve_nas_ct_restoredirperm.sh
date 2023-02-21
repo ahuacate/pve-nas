@@ -8,13 +8,13 @@
 #---- Source -----------------------------------------------------------------------
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-COMMON_PVE_SRC_DIR="${DIR}/../../common/pve/src"
-COMMON_DIR="${DIR}/../../common"
+COMMON_PVE_SRC_DIR="$DIR/../../common/pve/src"
+COMMON_DIR="$DIR/../../common"
 
 #---- Dependencies -----------------------------------------------------------------
 
 # Run Bash Header
-source ${COMMON_PVE_SRC_DIR}/pvesource_bash_defaults.sh
+source $COMMON_PVE_SRC_DIR/pvesource_bash_defaults.sh
 
 #---- Static Variables -------------------------------------------------------------
 #---- Other Variables --------------------------------------------------------------
@@ -26,7 +26,7 @@ SECTION_HEAD='PVE NAS'
 #---- Body -------------------------------------------------------------------------
 
 #---- Restore, update default storage folder permissions
-source ${COMMON_DIR}/nas/src/nas_identify_storagepath.sh
-source ${COMMON_DIR}/nas/src/nas_basefoldersetup.sh
 
+source $COMMON_DIR/nas/src/nas_identify_storagepath.sh
+source $COMMON_DIR/nas/src/nas_basefoldersetup.sh
 #-----------------------------------------------------------------------------------

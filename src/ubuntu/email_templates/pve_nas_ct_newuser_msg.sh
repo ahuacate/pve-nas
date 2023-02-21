@@ -8,17 +8,22 @@
 #---- Dependencies -----------------------------------------------------------------
 #---- Static Variables -------------------------------------------------------------
 
-if [ -f /etc/proftpd/conf.d/global_default.conf ]; then
+if [ -f "/etc/proftpd/conf.d/global_default.conf" ]
+then
   # Check for Remote WAN Address status
-  if  [ "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_ADDRESS=*' | awk -F'=' '{ print $2}')" == 1 ]; then
+  if  [ "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_ADDRESS=*' | awk -F'=' '{ print $2}')" = 1 ]
+  then
     SFTP_REMOTE_WAN_ADDRESS='Not available'
-  elif [ "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_ADDRESS=*' | awk -F'=' '{ print $2}')" != 1 ]; then
+  elif [ ! "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_ADDRESS=*' | awk -F'=' '{ print $2}')" = 1 ]
+  then
     SFTP_REMOTE_WAN_ADDRESS=$(cat /etc/proftpd/conf.d/global_default.conf | grep '^#\s*SFTP_REMOTE_WAN_ADDRESS=*' | awk -F'=' '{ print $2 }' |  sed 's/^[ \t]*//;s/[ \t]*$//')
   fi
   # Check for Remote Port Address status
-  if  [ "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_PORT=*' | awk -F'=' '{ print $2}')" == 1 ]; then
+  if  [ "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_PORT=*' | awk -F'=' '{ print $2}')" = 1 ]
+  then
     SFTP_REMOTE_WAN_PORT='Not available'
-  elif [ "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_PORT=*' | awk -F'=' '{ print $2}')" != 1 ]; then
+  elif [ ! "$(cat /etc/proftpd/conf.d/global_default.conf 2> /dev/null | grep '^#\s*SFTP_REMOTE_WAN_PORT=*' | awk -F'=' '{ print $2}')" = 1 ]
+  then
     SFTP_REMOTE_WAN_PORT=$(cat /etc/proftpd/conf.d/global_default.conf | grep '^#\s*SFTP_REMOTE_WAN_PORT=*' | awk -F'=' '{ print $2 }' |  sed 's/^[ \t]*//;s/[ \t]*$//')
   fi
 else
@@ -27,7 +32,8 @@ else
 fi
 
 # Check SFTP LAN Port
-if [ -f /etc/proftpd/conf.d/sftp.conf ]; then
+if [ -f "/etc/proftpd/conf.d/sftp.conf" ]
+then
   LOCAL_LAN_PORT=$(cat /etc/proftpd/conf.d/sftp.conf 2> /dev/null | grep '^\s*Port.*[0-9]$' |  sed 's/^[ \t]*//;s/[ \t]*$//' | awk -F' ' '{ print $2}')
 else
   LOCAL_LAN_PORT='Not available'
@@ -56,7 +62,7 @@ Content-Type: text/html
 <li><strong>Username</strong> : ${USER}</li>
 <li><strong>Password</strong> : ${PASSWORD}</li>
 <li><strong>Primary User Group</strong> : ${GROUP}</li>
-<li><strong>Supplementary User Group</strong> : $(if [ ${GROUP} == chrootjail ]; then echo "None"; else echo -e ${USERMOD} | sed 's/^...//' | sed 's/,/, /'; fi)</li>
+<li><strong>Supplementary User Group</strong> : $(if [ ${GROUP} = chrootjail ]; then echo "None"; else echo -e ${USERMOD} | sed 's/^...//' | sed 's/,/, /'; fi)</li>
 <li><strong>Private SSH Key (Standard)</strong> : id_${USER,,}_ed25519</li>
 <li><strong>Private SSH Key (PPK version)</strong> : id_${USER,,}_ed25519.ppk</li>
 <li><strong>NAS LAN IP Address</strong> : $(hostname -I)</li>
@@ -66,25 +72,25 @@ Content-Type: text/html
 
 <h3>---- Account type (folder access level)</h3>
 <p>The User has been issued a '${GROUP}' level account type. The User's folder access rights are as follows:</p>
-$(if [ ${GROUP} == privatelab ]; then
+$(if [ ${GROUP} = privatelab ]; then
 echo '<div>
 <ul style="list-style-type: square;">
 <li>privatelab  -  <em>Private storage including 'medialab' &amp; 'homelab' rights</em></li>
 </ul>
 </div>'
-elif [ ${GROUP} == homelab ]; then
+elif [ ${GROUP} = homelab ]; then
 echo '<div>
 <ul style="list-style-type: square;">
 <li>homelab  -  <em>Everything to do with a smart home including 'medialab'</em></li>
 </ul>
 </div>'
-elif [ ${GROUP} == medialab ]; then
+elif [ ${GROUP} = medialab ]; then
 echo '<div>
 <ul style="list-style-type: square;">
 <li>medialab  -  <em>Everything to do with media (i.e movies, series &amp; music)</em></li>
 </ul>
 </div>'
-elif [ ${GROUP} == chrootjail ]; then
+elif [ ${GROUP} = chrootjail ]; then
 echo '<div>'
 echo '<ul style="list-style-type: square;">'
 echo '<li>chrootjail  -  The User is safe and secure in a jailed account ( <em>a good thing</em> )</li>'
@@ -148,9 +154,9 @@ fi)
 Content-Type: application/zip
 Content-Disposition: attachment; filename="id_${USER,,}_ed25519"
 Content-Transfer-Encoding: base64
-$(if [ ${GROUP} == privatelab ] || [ ${GROUP} == homelab ] || [ ${GROUP} == medialab ]; then
+$(if [ ${GROUP} = privatelab ] || [ ${GROUP} = homelab ] || [ ${GROUP} = medialab ]; then
     echo '$(openssl base64 < /srv/${HOSTNAME}/homes/${USER}/.ssh/id_${USER,,}_ed25519)'
-elif [ ${GROUP} == chrootjail ]; then
+elif [ ${GROUP} = chrootjail ]; then
     echo '$(openssl base64 < /${HOME_BASE}${USER}/.ssh/id_${USER,,}_ed25519)'
 fi)
 
@@ -158,9 +164,9 @@ fi)
 Content-Type: application/zip
 Content-Disposition: attachment; filename="id_${USER,,}_ed25519.ppk"
 Content-Transfer-Encoding: base64
-$(if [ ${GROUP} == privatelab ] || [ ${GROUP} == homelab ] || [ ${GROUP} == medialab ]; then
+$(if [ ${GROUP} = privatelab ] || [ ${GROUP} = homelab ] || [ ${GROUP} = medialab ]; then
     echo '$(openssl base64 < /srv/${HOSTNAME}/homes/${USER}/.ssh/id_${USER,,}_ed25519.ppk)'
-elif [ ${GROUP} == chrootjail ]; then
+elif [ ${GROUP} = chrootjail ]; then
     echo '$(openssl base64 < /${HOME_BASE}${USER}/.ssh/id_${USER,,}_ed25519.ppk)'
 fi)
 
