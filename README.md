@@ -1,7 +1,7 @@
 <h1>PVE File Server (NAS)</h1>
 
 **Lightweight - Ubuntu NAS (CT)**
-A lightweight NAS built on a CT using only 512Mb RAM. Ubuntu OS and Webmin WebGui frontend.
+A lightweight NAS built on a CT with 512Mb RAM. Ubuntu OS and Webmin WebGui frontend.
 
 Backend storage is by Proxmox. Choose between LVM or ZFS Raid or a basic single disk ext4 file system. A USB disk-based NAS is also supported.
 
@@ -9,8 +9,7 @@ Backend storage is by Proxmox. Choose between LVM or ZFS Raid or a basic single 
 Open Media Vault (OMV) NAS built in a Proxmox VM. Requires direct attached storage or PCI SAS/SATA/NVMe HBA Card pass-through. Our default file system is EXT4 or BTRFS using MergerFS and SnapRaid.
 
 <h2>Features</h2>
-
-All NAS builds support our suite of application CTs and VMs. Each NAS type install includes:
+All builds include:
 
 * Power User & Group Accounts
     * Groups: medialab:65605, homelab:65606, privatelab:65607, chrootjail:65608
@@ -18,7 +17,7 @@ All NAS builds support our suite of application CTs and VMs. Each NAS type insta
     * Users media, home and private are our default CT App users
 * Chrootjail Group for general User accounts
 * Support all Medialab file permissions required by Sonarr, Radarr, JellyFin, NZBGet and more
-* Full set of base and sub-folders ready for all CT applications
+* Includes all storage folders ready for all CT applications
 * Folder and user permissions are set including ACLs
 * NFS 4.0 exports ready for PVE host's backend storage mounts
 * SMB 3.0 shares with access permissions set ( by User Group accounts )
@@ -73,7 +72,7 @@ USB disk ext4 backend, Ubuntu frontend.
 All data is stored on a single external USB disk. A basic ext4 file system backend is managed by your Proxmox host.
 </ol>
 
-Another build option is our OMV NAS. If you have adequate RAM (32Gb or more) and want a user-friendly NAS WebGUI interface we recommend you install OMV.
+The heavyweight NAS option is our OMV VM. If you have adequate RAM (32Gb or more) and want a user-friendly NAS WebGUI interface we recommend you install OMV.
 
 <ol>
 <li><h4><b>OMV NAS VM - Direct attached storage</b><h/4></li>
@@ -142,6 +141,9 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/ahuacate/pve-nas/main/p
     - [5.1. Create new User Accounts](#51-create-new-user-accounts)
         - [5.1.1. Create "Power User" Accounts](#511-create-power-user-accounts)
         - [5.1.2. Create Restricted and Jailed User Accounts (Standard Users)](#512-create-restricted-and-jailed-user-accounts-standard-users)
+- [6. Q&A](#6-qa)
+    - [6.1. What's the NAS root password?](#61-whats-the-nas-root-password)
+    - [6.2. Ubuntu NAS with a USB disk has I/O errors?](#62-ubuntu-nas-with-a-usb-disk-has-io-errors)
 
 <!-- /TOC -->
 
@@ -423,5 +425,22 @@ The options are options are:
 | -rwxr---     | /srv/hostname/video (All)                               |
 
 All Home folders are automatically suffixed: `username_injail`.
+
+<hr>
+
+# 6. Q&A
+## 6.1. What's the NAS root password?
+Installation default credentials for Ubuntu based NAS:
+* User:  root
+* Password:  ahuacate
+
+Default credentials for OMV NAS:
+* User:  admin
+* Password:  openmediavault
+
+## 6.2. Ubuntu NAS with a USB disk has I/O errors?
+A known issue is a USB power management called autosuspend. Our install uses UDEV rule to disable autosuspend but the problem might your USB hub or SATA adapter. Try these fixes:
+* [Kernel Patch](https://unix.stackexchange.com/questions/91027/how-to-disable-usb-autosuspend-on-kernel-3-7-10-or-above)
+* [USB Autosuspend deaktivieren](https://blog.vulkanbox.dontexist.com/promox-mit-zram/)
 
 <hr>

@@ -61,11 +61,15 @@ fi
 
 #---- Static Variables -------------------------------------------------------------
 
-#---- Set Package Installer Temp Folder
+#---- Set Package Installer Temp Dir
+
+# Set 'rep_temp' dir
 REPO_TEMP='/tmp'
-cd "$REPO_TEMP"
+# Change to 'repo temp' dir
+cd $REPO_TEMP
 
 #---- Local Repo path (check if local)
+
 # For local SRC a 'developer_settings.git' file must exist in repo dir
 REPO_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P | sed "s/${GIT_USER}.*/$GIT_USER/" )"
 
@@ -73,6 +77,8 @@ REPO_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P | sed "s/${GIT_US
 #---- Other Files ------------------------------------------------------------------
 
 #---- Package loader
+
+# Check for local source
 if [ -f "$REPO_PATH/common/bash/src/pve_repo_loader.sh" ] && [[ $(sed -n 's/^dev_git_mount=//p' $REPO_PATH/developer_settings.git 2> /dev/null) == '0' ]]
 then
   # Download Local loader (developer)
@@ -87,5 +93,7 @@ fi
 #---- Body -------------------------------------------------------------------------
 
 #---- Run Installer
+
+# Run repo installer (repo product selector)
 source $REPO_PATH/$GIT_REPO/common/bash/src/pve_repo_toolbox_main.sh
 #-----------------------------------------------------------------------------------

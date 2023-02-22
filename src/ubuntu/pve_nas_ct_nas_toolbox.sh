@@ -13,6 +13,7 @@
 #---- Prerequisites
 # Check SMTP status
 check_smtp_status
+
 if [ "$SMTP_STATUS" = 0 ]
 then
   # Options if SMTP is inactive

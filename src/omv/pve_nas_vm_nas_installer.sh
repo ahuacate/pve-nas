@@ -430,15 +430,15 @@ section "Completion Status"
 if [ "$VM_DISK_PT" = 0 ]
 then
   # Aborted disk pass-through
-  display_msg1="You have chosen to abort setting disk pass-through for your VM '${HOSTNAME,,}'. No disk pass-through has been configured. We recommend you destroy VM '${VMID} (${HOSTNAME,,})', fix any issue you have with your disks and run the installer again."
+  display_msg1="You have chosen to abort setting disk pass-through for your VM '${HOSTNAME,,}'. No disk pass-through has been configured. You can manually configure your pass-through options using the Proxmox WebGUI interface > ''${VMID} (${HOSTNAME,,})' > 'Hardware' to pass-through your required devices.\n\nOr you can destroy VM '${VMID} (${HOSTNAME,,})', fix any issue you have with your disks and run the installer again."
 elif [ "$VM_DISK_PT" = 1 ]
 then
-  # PCIe Pass-through
-  display_msg1="You have chosen to configure your NAS with PCIe HBA card pass-through. Steps to be taken are:\n\n    --  Connect your NAS disks to your SATA/SAS/NVMe PCIe HBA card\n    --  Follow the steps in our guide: https://github.com/ahuacate/nas-hardmetal\n\nAfter configuring your PCIe HBA card pass-through using the PVE web interface on PVE host '$(hostname)', go to VM '${VMID} (${HOSTNAME,,})' > '_Shell' and start the VM. The OMV installation frontend WebGUI will start. Complete the OMV installation as per our Github guide:\n\n    --  https://github.com/ahuacate/nas-hardmetal\n\nAfter completing the OMV installation your login credentials are:\n\n    Web interface\n    --  URL: http://${HOSTNAME,,}.$(hostname -d) (hostname.domain)\n    --  User: admin\n    --  Password: openmediavault\n\n    Client (SSH, console)\n    --  User: root\n    --  Password: The password that you have set during installation."
+  # PCIe disk Pass-through
+  display_msg1="Using the PVE web interface on PVE host '$(hostname)', go to VM '${VMID} (${HOSTNAME,,})' > '_Shell' and start the VM. The OMV installation frontend WebGUI will start. Complete the OMV installation as per our Github guide:\n\n    --  https://github.com/ahuacate/nas-hardmetal\n\nAfter completing the OMV installation your login credentials are:\n\n    Web interface\n    --  URL: http://${HOSTNAME,,}.$(hostname -d) (hostname.domain)\n    --  User: admin\n    --  Password: openmediavault\n\n    Client (SSH, console)\n    --  User: root\n    --  Password: The password that you have set during installation."
 elif [ "$VM_DISK_PT" = 2 ]
 then
-  # PCIe Pass-through
-  display_msg1="Using the PVE web interface on PVE host '$(hostname)', go to VM '${VMID} (${HOSTNAME,,})' > '_Shell' and start the VM. The OMV installation frontend WebGUI will start. Complete the OMV installation as per our Github guide:\n\n    --  https://github.com/ahuacate/nas-hardmetal\n\nAfter completing the OMV installation your login credentials are:\n\n    Web interface\n    --  URL: http://${HOSTNAME,,}.$(hostname -d) (hostname.domain)\n    --  User: admin\n    --  Password: openmediavault\n\n    Client (SSH, console)\n    --  User: root\n    --  Password: The password that you have set during installation."
+  # PCIe HBA Pass-through
+  display_msg1="You have chosen to configure your NAS with PCIe HBA card pass-through. Steps to be taken are:\n\n    --  Connect your NAS disks to your SATA/SAS/NVMe PCIe HBA card\n    --  Follow the steps in our guide: https://github.com/ahuacate/nas-hardmetal\n\nAfter configuring your PCIe HBA card pass-through using the PVE web interface on PVE host '$(hostname)', go to VM '${VMID} (${HOSTNAME,,})' > '_Shell' and start the VM. The OMV installation frontend WebGUI will start. Complete the OMV installation as per our Github guide:\n\n    --  https://github.com/ahuacate/nas-hardmetal\n\nAfter completing the OMV installation your login credentials are:\n\n    Web interface\n    --  URL: http://${HOSTNAME,,}.$(hostname -d) (hostname.domain)\n    --  User: admin\n    --  Password: openmediavault\n\n    Client (SSH, console)\n    --  User: root\n    --  Password: The password that you have set during installation."
 fi
 
 msg_box "${HOSTNAME^^} VM creation was a success. To complete the build you must now follow these steps.
