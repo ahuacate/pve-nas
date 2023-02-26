@@ -6,8 +6,8 @@
 
 #---- Source -----------------------------------------------------------------------
 
-# PVE NAS bash utility
-source $SHARED_DIR/pve_nas_bash_utility.sh
+# NAS bash utility
+source $COMMON_DIR/nas/src/nas_bash_utility.sh
 
 #---- Dependencies -----------------------------------------------------------------
 #---- Static Variables -------------------------------------------------------------
@@ -22,6 +22,10 @@ basic_disklabel='(.*_hba|.*_usb|.*_onboard)$'
 # Disk Over-Provisioning (value is % of disk)
 disk_op_ssd=10
 
+# Disk device regex
+type_ssd='(^/dev/sd[a-z])'
+type_nvme='(^/dev/nvme[0-9]n[0-9])'
+
 #---- Other Variables --------------------------------------------------------------
 #---- Other Files ------------------------------------------------------------------
 
@@ -32,88 +36,96 @@ stor_min=5
 #---- Body -------------------------------------------------------------------------
 
 #---- Prerequisites
+
 # Create storage list array
 storage_list
 
 # Create a working list array
 stor_LIST
 
-# Disk count by type
-disk_CNT=$(printf '%s\n' "${storLIST[@]}" | awk -F':' -v stor_min="$stor_min" -v input_tran="$input_tran" -v basic_disklabel="$basic_disklabel" \
-'BEGIN{OFS=FS} {$8 ~ /G$/} {size=0.0+$8} \
-{if ($5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) { print $0 }}' | wc -l)
-
-# Available ZPool list
-zpoolLIST=()
+# Create ZPool list
+zpool_LIST=()
 while read zpool
 do
   # Check if ZPool is already configured for ZFS cache
   if [[ ! $(zpool status $zpool | grep -w 'logs\|cache') ]]
   then
-    zpoolLIST+=( "$zpool" )
+    zpool_LIST+=( "$zpool" )
   fi
 done < <( zpool list -H -o name | sed '/^rpool/d' ) # file listing of zpools
 
-# Check SSD/NVMe storage is available
-if [ "$disk_CNT" = 0 ]
-then
-  msg "We could NOT detect any unused available SSD or NVMe storage devices. Unused disk(s) might have been wrongly identified as 'system drives' if they contain Linux system or OS partitions. To fix this issue, manually format the disk erasing all data before running this installation again. USB disks cannot be used for ZFS cache. Bye..."
-  echo
-  return
-fi
-
 # Check for existing ZPools
-if [ ${#zpoolLIST[@]} = 0 ]
+if [ ${#zpool_LIST[@]} = 0 ]
 then
   msg "We could NOT detect any existing ZPools to add ZFS Cache. First create a ZPool and try again. Bye..."
   echo
   return
 fi
 
+
+#---- ZFS cache disk list
+# 1=PATH:2=KNAME:3=PKNAME:4=FSTYPE:5=TRAN:6=MODEL:7=SERIAL:8=SIZE:9=TYPE:10=ROTA:11=UUID:12=RM:13=LABEL:14=ZPOOLNAME:15=SYSTEM
+# build:description:tran:size|action:all
+
+zfs_cache_option_input=$(printf '%s\n' "${storLIST[@]}" | awk -F':' -v stor_min="$stor_min" -v input_tran="$input_tran" -v basic_disklabel="$basic_disklabel" -v type_ssd="$type_ssd" -v type_nvme="$type_nvme" \
+'BEGIN{OFS=FS} {$8 ~ /G$/} {size=0.0+$8} \
+# TYPE01: Select SSD
+{if ($1 ~ type_ssd && $5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) print "TYPE01", "SSD", $0 } \
+# TYPE02: Select NVMe
+{if ($1 ~ type_nvme && $5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) print "TYPE02", "NVMe", $0 }')
+
+# Create selection labels & values
+zfs_cache_option_labels=$(printf '%s\n' "$zfs_cache_option_input" | sed '/^$/d' | awk 'BEGIN{FS=OFS=":"} { print $3, $8, $2, $10 }')
+zfs_cache_option_values=$(printf '%s\n' "$zfs_cache_option_input" | sed '/^$/d' | cut -d: -f1,3-)
+
+# ZFS option cnt
+zfs_cache_option_cnt=$(echo "$zfs_cache_option_values" | sed '/^$/d' | wc -l)
+
+# Create display
+zfs_cache_option_display=$(printf '%s\n' "$zfs_cache_option_input" | sed '/^$/d' | awk 'BEGIN{FS=OFS=":"} { print $3, $8, $2, $10 }' | column -s : -t -N "DEVICE PATH,DESCRIPTION,TYPE,SIZE" | indent2)
+
+# Check SSD/NVMe storage is available
+if [ "$zfs_cache_option_cnt" = 0 ]
+then
+  msg "We could NOT detect any unused available SSD or NVMe storage devices. Unused disk(s) might have been wrongly identified as 'system drives' if they contain Linux system or OS partitions. To fix this issue, manually format the disk erasing all data before running this installation again. USB disks cannot be used for ZFS cache. Bye..."
+  echo
+  return
+fi
+
+
 #---- Select ZFS Cache devices
+
 section "Select ZFS Cache devices"
 # 1=PATH:2=KNAME:3=PKNAME:4=FSTYPE:5=TRAN:6=MODEL:7=SERIAL:8=SIZE:9=TYPE:10=ROTA:11=UUID:12=RM:13=LABEL:14=ZPOOLNAME:15=SYSTEM
 
-# Select member disks
-type_ssd='(^/dev/sd[a-z])'
-type_nvme='(^/dev/nvme[0-9]n[0-9])'
+# Select cache member disks
 while true
 do
-  msg_box "#### PLEASE READ CAREFULLY - ZFS CACHE SETUP ####\n\nThere are ${disk_CNT}x available device(s) for ZFS Cache. Do not co-mingle SSD and NVMe cache devices together.\n\n$(printf '%s\n' "${storLIST[@]}" | awk -F':' -v stor_min="$stor_min" -v input_tran="$input_tran" -v basic_disklabel="$basic_disklabel" -v type_ssd="$type_ssd" -v type_nvme="$type_nvme" \
-  'BEGIN{OFS=FS} {$8 ~ /G$/} {size=0.0+$8} \
-  {if ($1 ~ type_ssd && $5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) print $1, $6, "SSD", $8 } \
-  {if ($1 ~ type_nvme && $5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) print $1, $6, "NVMe", $8 }' \
-  | column -s : -t -N "DEVICE PATH,DESCRIPTION,TYPE,SIZE" | indent2)\n\nIn the next steps the User must select their ZFS cache devices (recommend a maximum of 2x devices). The devices will be erased and wiped of all data and partitioned ready for ZIL and ARC or L2ARC cache.\n\nThe ARC or L2ARC and ZIL cache build options are:\n\n1.  Standard Cache: Select 1x device only. No ARC,L2ARC or ZIL disk redundancy.\n2.  Accelerated Cache: Select 2x devices. ARC or L2ARC cache set to Raid0 (stripe) and ZIL set to Raid1 (mirror)."
+  # Create labels
+  OPTIONS_LABELS_INPUT=$(printf '%s\n' "$zfs_cache_option_labels" | column -t -s :)
+
+  # Create values
+  OPTIONS_VALUES_INPUT=$(printf '%s\n' "$zfs_cache_option_values")
+
+  # Display msg
+  msg_box "#### PLEASE READ CAREFULLY - ZFS CACHE SETUP ####\n\nThere are ${zfs_cache_option_cnt}x available device(s) for ZFS Cache. Do not co-mingle SSD and NVMe cache devices together.\n\n$(printf '%s\n' "$zfs_cache_option_display")\n\nIn the next steps the User must select their ZFS cache devices (recommend a maximum of 2x devices). The devices will be erased and wiped of all data and partitioned ready for ZIL and ARC or L2ARC cache.\n\nThe ARC or L2ARC and ZIL cache build options are:\n\n1.  Standard Cache: Select 1x device only. No ARC,L2ARC or ZIL disk redundancy.\n2.  Accelerated Cache: Select 2x devices. ARC or L2ARC cache set to Raid0 (stripe) and ZIL set to Raid1 (mirror)."
 
   # Make selection
-  OPTIONS_VALUES_INPUT=$(printf '%s\n' "${storLIST[@]}" | awk -F':' -v stor_min="$stor_min" -v input_tran="$input_tran" -v basic_disklabel="$basic_disklabel" -v type_ssd="$type_ssd" -v type_nvme="$type_nvme" \
-  'BEGIN{OFS=FS} {$8 ~ /G$/} {size=0.0+$8} \
-  # Select SSD
-  {if ($1 ~ type_ssd && $5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) print "TYPE01", $0 } \
-  # Select NVMe
-  {if ($1 ~ type_nvme && $5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) print "TYPE02", $0 }')
-  OPTIONS_LABELS_INPUT=$(printf '%s\n' "${storLIST[@]}" | awk -F':' -v stor_min="$stor_min" -v input_tran="$input_tran" -v basic_disklabel="$basic_disklabel" -v type_ssd="$type_ssd" -v type_nvme="$type_nvme" \
-  'BEGIN{OFS=FS} {$8 ~ /G$/} {size=0.0+$8} \
-  # TYPE01: Select SSD
-  {if ($1 ~ type_ssd && $5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) print $1, $6, "SSD", $8 } \
-  # TYPE02: Select NVMe
-  {if ($1 ~ type_nvme && $5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) print $1, $6, "NVMe", $8 }' \
-  | column -t -s :)
   makeselect_input1 "$OPTIONS_VALUES_INPUT" "$OPTIONS_LABELS_INPUT"
   multiselect_confirm SELECTED "$OPTIONS_STRING"
 
   # Create input disk list array
-  inputcachediskLIST=()
+  inputcachedisk_LIST=()
   for i in "${RESULTS[@]}"
   do
-    inputcachediskLIST+=( $(echo $i) )
+    inputcachedisk_LIST+=( $(echo $i) )
   done
 
   # Check device number and co-mingling status of selected devices
-  if [ "${#inputcachediskLIST[@]}" = 0 ] || [[ "${inputcachediskLIST[*]}" =~ ^TYPE01 ]] && [[ "${inputcachediskLIST[*]}" =~ ^TYPE02 ]]
+  if [ "${#inputcachedisk_LIST[@]}" = 0 ] || [[ "${inputcachedisk_LIST[*]}" =~ ^TYPE01 ]] && [[ "${inputcachedisk_LIST[*]}" =~ ^TYPE02 ]]
   then
-    msg "The User selected ${#inputcachediskLIST[@]}x devices. The requirement is:\n  --  Minimum of '1x' device\n  --  A recommended maximum of '2x' devices\n  --  Cannot co-mingled SSD and NVMe devices together\nTry again..."
-  elif [ "${#inputcachediskLIST[@]}" -ge 1 ]
+    msg "The User selected ${#inputcachedisk_LIST[@]}x devices. The requirement is:\n  --  Minimum of '1x' device\n  --  A recommended maximum of '2x' devices\n  --  Cannot co-mingled SSD and NVMe devices together\nTry again..."
+  elif [ "${#inputcachedisk_LIST[@]}" -ge 1 ]
   then
     break
   fi
@@ -121,9 +133,18 @@ done
 
 
 #---- Set ZFS cache partition sizes
+
 section "Set ZFS cache partition sizes"
 
-msg_box "#### Set ARC or L2ARC cache and ZIL disk partition sizes ####\n\nYou have allocated '${#inputcachediskLIST[@]}x' device(s) for ZFS cache partitioning.\nThe maximum size of a ZIL log should be about half the size of your hosts $(grep MemTotal /proc/meminfo | awk '{printf "%.0fGB\n", $2/1024/1024}') installed physical RAM memory BUT not less than 8GB.\n\nThe ARC or L2ARC cache size should not be less than 64GB but will be sized to use the whole ZFS cache device.\n\nThe system will automatically calculate the best partition sizes for you. A device over-provisioning factor of ${disk_op_ssd}% will be applied."
+msg_box "#### Set ARC or L2ARC cache and ZIL disk partition sizes ####
+
+You have allocated ${#inputcachedisk_LIST[@]}x device(s) for ZFS cache partitioning.
+
+The maximum size of a ZIL log should be about half the size of your hosts $(grep MemTotal /proc/meminfo | awk '{printf "%.0fGB\n", $2/1024/1024}') installed physical RAM memory BUT not less than 8GB.
+
+The ARC or L2ARC cache size should not be less than 64GB but will be sized to use the whole ZFS cache device.
+
+The system will automatically calculate the best partition sizes for you. A device over-provisioning factor of ${disk_op_ssd}% will be applied."
 echo
 
 # Set ZIL partition size
@@ -147,6 +168,7 @@ then
 
   OPTIONS_VALUES_INPUT=$(seq $(grep MemTotal /proc/meminfo | awk '{printf "%.0f\n", $2/1024/1024/2}') -${zil_seq_size} 8)
   OPTIONS_LABELS_INPUT=$(seq $(grep MemTotal /proc/meminfo | awk '{printf "%.0f\n", $2/1024/1024/2}') -${zil_seq_size} 8 | sed 's/$/GB/' | sed '1 s/$/ (Recommended)/')
+  # Make selection
   makeselect_input1 "$OPTIONS_VALUES_INPUT" "$OPTIONS_LABELS_INPUT"
   singleselect SELECTED "$OPTIONS_STRING"
   # Set ZIL size
@@ -154,7 +176,7 @@ then
 fi
 
 # Set ARC partition size (based on smallest device)
-arc_size_var=$(( $(printf '%s\n' "${inputcachediskLIST[@]}" | sort -t ':' -k 9 | awk -F':' 'NR==1{print $9}' | sed 's/[[:alpha:]]//' | awk '{print ($0-int($0)<0.499)?int($0):int($0)+1}') * ( 100 - $disk_op_ssd ) / 100 - $zil_size_var ))
+arc_size_var=$(( $(printf '%s\n' "${inputcachedisk_LIST[@]}" | sort -t ':' -k 9 | awk -F':' 'NR==1{print $9}' | sed 's/[[:alpha:]]//' | awk '{print ($0-int($0)<0.499)?int($0):int($0)+1}') * ( 100 - $disk_op_ssd ) / 100 - $zil_size_var ))
 
 # Set final ZIL and ARC variables into bytes
 zil_size="$(( ($zil_size_var * 1073741824)/512 ))"
@@ -164,12 +186,13 @@ arc_size="$(( ($arc_size_var * 1073741824)/512 ))"
 msg "GPT label & wipe ZFS cache devices..."
 while read dev
 do
-  dd if=/dev/zero of=$dev count=1 bs=512 conv=notrunc 2>/dev/null
+  # Full device wipeout
+  dd if=/dev/urandom of=$dev count=1 bs=1M conv=notrunc 2>/dev/null
+  # Label device
   echo 'label: gpt' | sfdisk --quiet --wipe=always --force $dev
   info "GPT labelled: $dev"
-done < <( printf '%s\n' "${inputcachediskLIST[@]}" | awk -F':' '{ print $2 }' ) # file listing of disks
+done < <( printf '%s\n' "${inputcachedisk_LIST[@]}" | awk -F':' '{ print $2 }' ) # file listing of disks
 echo
-
 
 # Partition ZFS cache device(s)
 msg "Partition ZFS cache device(s)..."
@@ -202,7 +225,7 @@ do
   # Create cache disk input list
   inputcachedevLIST+=( "$dev${i}:$by_id_name:arc" )
   info "ARC cache partition created: $dev${i}"
-done < <( printf '%s\n' "${inputcachediskLIST[@]}" | awk -F':' '{ print $2 }' ) # file listing of disks
+done < <( printf '%s\n' "${inputcachedisk_LIST[@]}" | awk -F':' '{ print $2 }' ) # file listing of disks
 
 
 # Create ZFS ZIL arg
@@ -250,13 +273,15 @@ then
 fi
 
 #---- Apply ZFS Cache to ZPool
+
 section "Apply ZFS Cache to an existing ZPool"
 
-# Select a ZPool
-if [[ -z ${POOL} ]]
+# Select a ZPool to add cache to
+if [[ -z "$POOL" ]]
 then
-  OPTIONS_VALUES_INPUT=$(printf '%s\n' "${zpoolLIST[@]}" | sed -e '$a\TYPE00')
-  OPTIONS_LABELS_INPUT=$(printf '%s\n' "${zpoolLIST[@]}" | sed -e '$a\None. Exit this ZFS Cache installer')
+  OPTIONS_VALUES_INPUT=$(printf '%s\n' "${zpool_LIST[@]}" | sed -e '$a\TYPE00')
+  OPTIONS_LABELS_INPUT=$(printf '%s\n' "${zpool_LIST[@]}" | sed -e '$a\None. Exit this ZFS Cache installer')
+  # Make selection
   makeselect_input1 "$OPTIONS_VALUES_INPUT" "$OPTIONS_LABELS_INPUT"
   singleselect SELECTED "$OPTIONS_STRING"
   if [ "$RESULTS" = TYPE00 ]

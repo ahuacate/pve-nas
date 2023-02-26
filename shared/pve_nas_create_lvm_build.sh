@@ -73,12 +73,13 @@ LV_NAME=$(echo "$HOSTNAME" | sed 's/-/_/g') # Hostname mod (change any '-' to '_
 if [[ $(lvs | grep "^\s*$LV_NAME") ]] || [[ $(ls -A /mnt/$LV_NAME 2> /dev/null) ]]
 then
   i=1
-  while [[ $(lvs | grep "^\s*${LV_NAME}_${i}") ]] || [[ $(ls -A /mnt/${LV_NAME}_${i}) ]]
+  while [[ $(lvs | grep "^\s*${LV_NAME}_${i}") ]] || [[ $(ls -A /mnt/${LV_NAME}_${i} 2> /dev/null) ]]
   do
     i=$(( $i + 1 ))
   done
   LV_NAME=${LV_NAME}_$i
 fi
+
 
 # Set SRC mount point
 PVE_SRC_MNT="/mnt/$LV_NAME"
@@ -106,8 +107,8 @@ EOF
 lvmconfig --file /etc/lvm/profile/autoextend.profile --withcomments --config "activation/thin_pool_autoextend_threshold=$autoextend_threshold activation/thin_pool_autoextend_percent=$autoextend_percent"
 
 #---- Select a LVM build option
-section "Select a LVM build option"
 
+section "Select a LVM build option"
 
 while true
 do
@@ -119,53 +120,9 @@ do
   | sed -e '$a\None. Exit this installer:::TYPE00' \
   | column -t -s ":" -N "LVM OPTIONS,DESCRIPTION,SIZE,TYPE" -H TYPE -T DESCRIPTION -c 150 -d)
 
-  # Create labels
+  # Create values
   OPTIONS_VALUES_INPUT=$(printf '%s\n' "${lvm_option_values}" \
   | sed -e '$a\TYPE00:0')
-
-  # # Make selection
-  # OPTIONS_LABELS_INPUT=$(printf '%s\n' "${storLIST[@]}" | awk -F':' -v stor_min="$stor_min" -v input_tran="$input_tran" -v basic_disklabel="$basic_disklabel" \
-  # 'BEGIN{OFS=FS} {$8 ~ /G$/} {size=0.0+$8} \
-  # # Type01: Mount an existing LV
-  # {if($1 !~ /.*(root|tmeta|tdata|tpool|swap)$/ && $5 ~ input_tran && $9 == "lvm" && $13 !~ basic_disklabel && $15 == 0 && (system("lvs " $1 " --quiet --noheadings --segments -o type 2> /dev/null | grep -v 'thin-pool' | grep -q 'thin' > /dev/null") == 0 || system("lvs " $1 " --quiet --noheadings --segments -o type 2> /dev/null | grep -v 'thin-pool' | grep -q 'linear' > /dev/null") == 0)) \
-  # {cmd = "lvs " $1 " --noheadings -o lv_name | grep -v 'thinpool' | uniq | xargs | sed -r 's/[[:space:]]/,/g'"; cmd | getline lv_name; close(cmd); print "Mount existing LV", "LV name - "lv_name, $8, "TYPE01" }} \
-  # # Type02: Create LV in an existing Thin-pool
-  # {if($1 !~ /.*(root|tmeta|tdata|tpool|swap)$/ && $5 ~ input_tran && $4 == "" && $9 == "lvm" && $13 !~ basic_disklabel && $15 == 0 && system("lvs " $1 " --quiet --noheadings --segments -o type 2> /dev/null | grep -q 'thin-pool' > /dev/null") == 0 ) \
-  # {cmd = "lvs " $1 " --noheadings -o lv_name | uniq | xargs | sed -r 's/[[:space:]]/,/g'"; cmd | getline thinpool_name; close(cmd); print "Create LV in existing Thin-pool", "Thin-pool name - "thinpool_name, $8, "TYPE02" }} \
-  # # Type03: Create LV in an existing VG
-  # {if ($5 ~ input_tran && $4 == "LVM2_member" && $13 !~ basic_disklabel && $15 == 0) \
-  # print "Create LV in an existing VG", "VG name - "$14, $8, "TYPE03" } \
-  # # Type04: Destroy VG
-  # {if ($5 ~ input_tran && $4 == "LVM2_member" && $13 !~ basic_disklabel && $15 == 0) { cmd = "lvs " $14 " --noheadings -o lv_name | xargs | sed -r 's/[[:space:]]/,/g'"; cmd | getline $16; close(cmd); print "Destroy VG ("$14")", "Destroys LVs/Pools - "$16, "-", "TYPE04" }} \
-  # # Type05: Build a new LVM VG/LV - SSD Disks
-  # {if ($5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) { ssd_count++ }} END { if (ssd_count >= 1) print "Build a new LVM VG/LV - SSD Disks", "Select from "ssd_count"x SSD disks", "-", "TYPE05" } \
-  # # Type06: Build a new LVM VG/LV - HDD Disks
-  # {if ($5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 1 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) { hdd_count++ }} END { if (hdd_count >= 1) print "Build a new LVM VG/LV - HDD Disks", "Select from "hdd_count"x HDD disks", "-", "TYPE06" }' \
-  # | sort -t: -s -k 4,4 \
-  # | sed -e '$a\None. Exit this installer:::TYPE00' \
-  # | awk -F':' '!seen[$1$2]++' \
-  # | column -t -s ":" -N "LVM OPTIONS,DESCRIPTION,SIZE,TYPE" -H TYPE -T DESCRIPTION -c 150 -d)
-
-  # OPTIONS_VALUES_INPUT=$(printf '%s\n' "${storLIST[@]}" | awk -F':' -v stor_min="$stor_min" -v input_tran="$input_tran" -v basic_disklabel="$basic_disklabel" \
-  # 'BEGIN{OFS=FS} {$8 ~ /G$/} {size=0.0+$8} \
-  # # Type01: Mount an existing LV
-  # {if($1 !~ /.*(root|tmeta|tdata|tpool|swap)$/ && $5 ~ input_tran && $9 == "lvm" && $13 !~ basic_disklabel && $15 == 0 && (system("lvs " $1 " --quiet --noheadings --segments -o type 2> /dev/null | grep -v 'thin-pool' | grep -q 'thin' > /dev/null") == 0 || system("lvs " $1 " --quiet --noheadings --segments -o type 2> /dev/null | grep -v 'thin-pool' | grep -q 'linear' > /dev/null") == 0)) \
-  # {cmd = "lvs " $1 " --noheadings -o lv_name | grep -v 'thinpool' | uniq | xargs | sed -r 's/[[:space:]]/,/g'"; cmd | getline lv_name; close(cmd); print "TYPE01", lv_name }} \
-  # # Type02: Create LV in an existing Thin-pool
-  # {if($1 !~ /.*(root|tmeta|tdata|tpool|swap)$/ && $5 ~ input_tran && $4 == "" && $9 == "lvm" && $13 !~ basic_disklabel && $15 == 0 && system("lvs " $1 " --quiet --noheadings --segments -o type 2> /dev/null | grep -q 'thin-pool' > /dev/null") == 0 ) \
-  # {cmd = "lvs " $1 " --noheadings -o lv_name | uniq | xargs | sed -r 's/[[:space:]]/,/g'"; cmd | getline thinpool_name; close(cmd); print "TYPE02", thinpool_name }} \
-  # # Type03: Create LV in an existing VG
-  # {if ($5 ~ input_tran && $4 == "LVM2_member" && $13 !~ basic_disklabel && $15 == 0) \
-  # print "TYPE03", $14 } \
-  # # Type04: Destroy VG
-  # {if ($5 ~ input_tran && $4 == "LVM2_member" && $13 !~ basic_disklabel && $15 == 0) { cmd = "lvs " $14 " --noheadings -o lv_name | xargs | sed -r 's/[[:space:]]/,/g'"; cmd | getline $16; close(cmd); print "TYPE04", $14 }} \
-  # # Type05: Build a new LVM VG/LV - SSD Disks
-  # {if ($5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 0 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) { ssd_count++ }} END { if (ssd_count >= 1) print "TYPE05","0" } \
-  # # Type06: Build a new LVM VG/LV - HDD Disks
-  # {if ($5 ~ input_tran && $3 == 0 && ($4 != "LVM2_member" || $4 != "zfs_member") && $9 == "disk" && size >= stor_min && $10 == 1 && $13 !~ basic_disklabel && $14 == 0 && $15 == 0) { hdd_count++ }} END { if (hdd_count >= 1) print "TYPE06","1" }' \
-  # | sort -t: -s -k 1,1 \
-  # | sed -e '$a\TYPE00:0' \
-  # | awk -F':' '!seen[$1$2]++')
 
   makeselect_input1 "$OPTIONS_VALUES_INPUT" "$OPTIONS_LABELS_INPUT"
   singleselect SELECTED "$OPTIONS_STRING"
@@ -238,7 +195,7 @@ do
           do
             device=${dev%[0-9]}
             wipefs --all --force $device >/dev/null 2>&1
-            dd if=/dev/zero of=$device count=1 bs=512 conv=notrunc 2> /dev/null
+            dd if=/dev/urandom of=$device count=1 bs=1M conv=notrunc 2> /dev/null
           done < <( printf '%s\n' "${vg_dev_LIST[@]}" )
 
           # Destroy PV
@@ -411,11 +368,10 @@ then
   msg "Zapping, Erasing and Wiping disks..."
   while read dev
   do
-    sgdisk --zap $dev >/dev/null 2>&1
-    info "SGDISK - zapped (destroyed) the GPT data structures on device: $dev"
-    dd if=/dev/zero of=$dev count=1 bs=512 conv=notrunc 2>/dev/null
-    info "DD - cleaned & wiped device: $dev"
-    wipefs --all --force $dev >/dev/null 2>&1
+    # Full device wipeout
+    sgdisk --zap /dev/disk/by-id/$dev >/dev/null 2>&1
+    dd if=/dev/urandom of=/dev/disk/by-id/$dev bs=1M count=1 conv=notrunc 2>/dev/null
+    wipefs --all --force /dev/disk/by-id/$dev >/dev/null 2>&1
     info "wipefs - wiped device: $dev"
   done < <( printf '%s\n' "${inputdiskLIST[@]}" | awk -F':' '{ print $1 }' ) # file listing of disks to erase
   echo

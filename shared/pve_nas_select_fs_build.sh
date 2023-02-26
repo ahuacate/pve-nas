@@ -7,7 +7,7 @@
 #---- Source -----------------------------------------------------------------------
 #---- Dependencies -----------------------------------------------------------------
 
-# PVE NAS bash utility
+# NAS bash utility
 source $COMMON_DIR/nas/src/nas_bash_utility.sh
 
 # Requires arg 'usb' or 'onboard' to be set in source command
@@ -54,14 +54,14 @@ do
   fi
 done < <( cat /etc/fstab | awk '$2 ~ /^\/mnt\/.*/ {print $2}' ) # /mnt mount point listing
 
-# Wakeup USB disks
-wake_usb
+# # Wakeup USB disks
+# wake_usb
 
-# Create storage list array
-storage_list
+# # Create storage list array
+# storage_list
 
-# Create a working list array
-stor_LIST
+# # Create a working list array
+# stor_LIST
 
 #---- Create fs/disk lists by type (lvm,zfs,basic)
 
