@@ -365,14 +365,16 @@ then
   create_lvm_vgname_val "$input_tran_arg"
     
   # Erase / Wipe disks
-  msg "Zapping, Erasing and Wiping disks..."
+  msg "Erasing disks..."
   while read dev
   do
-    # Full device wipeout
+    # Full device erase
     sgdisk --zap /dev/disk/by-id/$dev >/dev/null 2>&1
-    dd if=/dev/urandom of=/dev/disk/by-id/$dev bs=1M count=1 conv=notrunc 2>/dev/null
+    #dd if=/dev/urandom of=/dev/disk/by-id/$dev bs=1M count=1 conv=notrunc 2>/dev/null
     wipefs --all --force /dev/disk/by-id/$dev >/dev/null 2>&1
-    info "wipefs - wiped device: $dev"
+    # Wait for pending udev events
+    udevadm settle
+    info "Erased device: $dev"
   done < <( printf '%s\n' "${inputdiskLIST[@]}" | awk -F':' '{ print $1 }' ) # file listing of disks to erase
   echo
 

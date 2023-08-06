@@ -80,9 +80,8 @@ DIR_SCHEMA="/srv/$(hostname)"
 source $SHARED_DIR/pve_nas_create_users.sh
 
 # Creating Chroot jail environment
-# export PARENT_EXEC=0 >/dev/null
 source $COMMON_PVE_SRC_DIR/pvesource_ct_ubuntu_installchroot.sh
-# SECTION_HEAD='PVE NAS'
+
 
 #---- Validating your network setup
 

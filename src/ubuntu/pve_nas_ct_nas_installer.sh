@@ -315,11 +315,11 @@ printf "%b\n" '#!/usr/bin/env bash' \
 "HOSTNAME='${HOSTNAME}'" \
 "SECTION_HEAD='${SECTION_HEAD}'" \
 "XTRA_SHARES='${XTRA_SHARES}'" \
-"SSH_PORT='${SSH_PORT}'" \
+"SSH_PORT='22'" \
 "PVE_HOST_IP='${PVE_HOST_IP}'" \
 "DIR_SCHEMA='/srv/${HOSTNAME}'" \
 "GIT_REPO='${GIT_REPO}'" \
-"APP_NAME='${APP_NAME}'" \
+"APP_NAME='nas'" \
 "PVE_HOSTNAME='${PVE_HOSTNAME}'" > $TEMP_DIR/pve_nas_ct_variables.sh
 pct push $CTID $TEMP_DIR/pve_nas_ct_variables.sh /tmp/pve_nas_ct_variables.sh -perms 755
 # Share folder lists

@@ -190,14 +190,13 @@ do
           done < <( printf '%s\n' "${inputdevLIST[@]}" ) # dev device listing
 
           # Erase / Wipe disks
-          msg "Zapping, Erasing and Wiping disks..."
+          msg "Erasing disks..."
           while read dev
           do
-            # Full device wipeout
+            # Full device erase
             sgdisk --zap $dev >/dev/null 2>&1
-            dd if=/dev/zero of=$dev bs=1M status=progress
             wipefs --all --force $dev >/dev/null 2>&1
-            info "Zapped, destroyed & wiped device: $dev"
+            info "Erased device: $dev"
           done < <( printf '%s\n' "${inputdevLIST[@]}" | grep 'sd[a-z]$\|nvme[0-9]n[0-9]$' | uniq ) # file listing of disks to erase
 
           # Wait for pending udev events
@@ -310,16 +309,16 @@ then
   disk_label="$mnt_name"
 
   # Erase / Wipe disks
-  msg "Zapping, erasing and wiping disks..."
+  msg "Erasing disks..."
   while read dev
   do
     # Full device wipeout
     sgdisk --zap $dev >/dev/null 2>&1
-    dd if=/dev/zero of=$dev bs=1M status=progress
+    # dd if=/dev/zero of=$dev bs=100M status=progress
     wipefs -a -f $dev >/dev/null 2>&1
     # Wait for pending udev events
     udevadm settle
-    info "Zapped, destroyed & wiped device: $dev"
+    info "Erased device: $dev"
   done < <( printf '%s\n' "${inputdiskLIST[@]}" | awk -F':' '{ print $1 }' ) # file listing of disks to erase
 
   # Create primary partition
@@ -336,7 +335,7 @@ then
     if [[ "$dev" =~ ^/dev/sd[a-z]$ ]]
     then
       # Format to default ext4
-      mkfs.ext4 -Fc $dev$num
+      mkfs.ext4 -F $dev$num
       # Wait for pending udev events
       udevadm settle
       # Create disk label
@@ -563,14 +562,14 @@ then
   disk_label="$mnt_name"
 
   # Erase / Wipe disks
-  msg "Zapping, Erasing and Wiping disks..."
+  msg "Erasing disks..."
   while read dev
   do
-    dd if=/dev/zero of=$dev bs=1M status=progress
+    # Full device erase
     wipefs -a -f $dev >/dev/null 2>&1
     # Wait for pending udev events
     udevadm settle
-    info "Zapped, destroyed & wiped device: $dev"
+    info "Erased device: $dev"
   done < <( printf '%s\n' "${inputdiskLIST[@]}" | awk -F':' '{ print $1 }' ) # file listing of disks to erase
 
   # Format existing partition
@@ -581,7 +580,7 @@ then
     if [[ "$dev" =~ ^/dev/sd[a-z][1-9]$ ]]
     then
       # Format to default ext4
-      mkfs.ext4 -Fc $dev
+      mkfs.ext4 -F $dev
       # Wait for pending udev events
       udevadm settle
       # Create disk label

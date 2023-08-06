@@ -157,13 +157,16 @@ then
         udevadm settle
 
         # Destroy and wipe disks
-        msg "Zapping, Erasing and Wiping disks..."
+        msg "Erasing device..."
         while read dev
         do
+          # Full device erase
           sgdisk --zap /dev/disk/by-id/$dev >/dev/null 2>&1
-          dd if=/dev/urandom of=/dev/disk/by-id/$dev bs=1M count=1 conv=notrunc 2>/dev/null
+          #dd if=/dev/urandom of=/dev/disk/by-id/$dev bs=1M count=1 conv=notrunc 2>/dev/null
           wipefs --all --force /dev/disk/by-id/$dev >/dev/null 2>&1
-          info "Destroyed and wiped disk:\n       /dev/disk/by-id/$dev"
+          # Wait for pending udev events
+          udevadm settle
+          info "Erased device:\n       /dev/disk/by-id/$dev"
         done < <( printf '%s\n' "${zpoolbyiddisk_LIST[@]}" ) # file listing of disks to erase
 
         # Wait for pending udev events
@@ -272,13 +275,14 @@ then
   section "Create new ZFS Pool '${POOL^}'"
     
   # Erase / Wipe ZFS pool disks
-  msg "Zapping, Erasing and Wiping ZFS pool disks..."
+  msg "Erasing ZFS pool disks..."
   while read dev
   do
+    # Full device erase
     sgdisk --zap $dev >/dev/null 2>&1
-    dd if=/dev/urandom of=$dev count=1 bs=1M conv=notrunc 2>/dev/null
+    #dd if=/dev/urandom of=$dev count=1 bs=1M conv=notrunc 2>/dev/null
     wipefs --all --force $dev >/dev/null 2>&1
-    info "Zapped, destroyed & wiped device: $dev"
+    info "Erased device: $dev"
   done < <( printf '%s\n' "${inputdiskLIST[@]}" | awk -F':' '{ print $1 }' ) # file listing of disks to erase
   echo
 
