@@ -266,12 +266,15 @@ OPTION_STATUS='1:cpu'
 VM_CPUTYPE='kvm64'
 
 #----[VM_STARTUP_OPTIONS]
-# Startup and shutdown behavior ( '--startup order=1,up=1,down=1' ). Order is a non-negative number defining the general startup order. Up=1 means first to start up. Shutdown in done with reverse ordering so down=1 means last to shutdown.
+# Startup and shutdown behavior ( '--startup order=1,up=1,down=1' ).
+# Order is a non-negative number defining the general startup order. Up=1 means first to start up. Shutdown in done with reverse ordering so down=1 means last to shutdown.
+# Up: Startup delay. Defines the interval between this container start and subsequent containers starts. For example, set it to 240 if you want to wait 240 seconds before starting other containers.
+# Down: Shutdown timeout. Defines the duration in seconds Proxmox VE should wait for the container to be offline after issuing a shutdown command. By default this value is set to 60, which means that Proxmox VE will issue a shutdown request, wait 60s for the machine to be offline, and if after 60s the machine is still online will notify that the shutdown action failed. 
 # Use '0' to disable, '1' to enable to enable ('<0 | 1>:<0 | string name>').
 OPTION_STATUS='1:startup'
 VM_ORDER='1'
-VM_UP='60'
-VM_DOWN='1'
+VM_UP='30'
+VM_DOWN='60'
 
 #----[VM_SCSI0_OPTIONS]
 # Use '0' to disable, '1' to enable to enable ('<0 | 1>:<0 | string name>').
